@@ -1,36 +1,58 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ITBI Intel
 
-## Getting Started
+Inteligência imobiliária de Porto Alegre a partir dos dados abertos do ITBI
+(Secretaria Municipal da Fazenda). Preços reais de venda de apartamentos,
+2020–2026, com busca por endereço e benchmarks por bairro (construção × tamanho).
 
-First, run the development server:
+## Stack
+
+- [Next.js 16](https://nextjs.org) (App Router, Turbopack)
+- [shadcn/ui](https://ui.shadcn.com) + [Recharts](https://recharts.org)
+- [Drizzle ORM](https://orm.drizzle.team) + libSQL (SQLite local)
+- [Zod](https://zod.dev) para validação de busca
+- [Bun](https://bun.sh) como runtime e gerenciador de pacotes
+
+## Setup
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+bun install
+
+# Carrega itbi/csv/*.csv do repositório irmão (~/Code/apartment-hunt/itbi)
+# em data/itbi.db (deduplica, calcula R$/m², tier × band)
+bun run import:data
+
+bun run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Aponte para outro diretório de CSVs com `ITBI_CSV_DIR`, ou para outro banco
+com `DATABASE_URL`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Estrutura
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+db/             schema drizzle + client libsql
+db/queries.ts   agregações (medianas SQL, percentis, benchmarks)
+scripts/import.ts  ETL dos CSVs → SQLite
+app/            páginas: dashboard (/), busca (/busca), bairros (/bairros, /bairro/[slug]), metodologia (/sobre)
+lib/            bairros (nomes), formatação pt-BR, dados (tiers/bands), busca (zod)
+components/     UI shadcn + gráficos
+```
 
-## Learn More
+## Metodologia
 
-To learn more about Next.js, take a look at the following resources:
+- `R$/m² = base_de_calculo / area_constr_privativa`, só apartamentos/coberturas.
+- Benchmarks por célula de época de construção × faixa de tamanho (mediana p50;
+  células com n < 3 não geram benchmark).
+- Deduplicação por rua + número + unidade (prioriza linhas pagas).
+- `bairro` na fonte vem truncado a 15 caracteres; os nomes são normalizados em
+  `lib/bairros.ts`.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Prod
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+bun run build
+bun start
+```
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Nota: SQLite local é adequado para uma instância única. Para escala, troque o
+driver por um banco remoto (libSQL/Turso ou Postgres) sem mudar as queries.
