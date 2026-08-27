@@ -12,22 +12,23 @@ import {
 } from "@/components/ui/table";
 import { BairroFilter } from "@/components/bairro-filter";
 import { bairroDisplay } from "@/lib/bairros";
-import { formatNumber, rsm2 } from "@/lib/format";
+import { Badge } from "@/components/ui/badge";
+import { formatNumber, formatPct, rsm2 } from "@/lib/format";
 import { slugify } from "@/lib/data";
-import { getBairros } from "@/db/queries";
+import { getBairros, getOverview } from "@/db/queries";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Bairros" };
 
 export default async function BairrosPage() {
-  const bairros = await getBairros();
+  const [bairros, overview] = await Promise.all([getBairros(), getOverview()]);
   const max = Math.max(...bairros.map((b) => b.medianRsm2), 1);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
       <h1 className="text-2xl font-semibold tracking-tight">Bairros</h1>
       <p className="mt-1 text-sm text-muted-foreground">
-        Volume e mediana R$/m² por bairro de Porto Alegre, 2020–2026.
+        Volume e mediana R$/m² por bairro, 2020–2026. Mediana real, não média.
       </p>
 
       <div className="mt-6">
@@ -42,7 +43,8 @@ export default async function BairrosPage() {
                 <TableHead>Bairro</TableHead>
                 <TableHead className="text-right">Transações</TableHead>
                 <TableHead className="text-right">Mediana R$/m²</TableHead>
-                <TableHead className="hidden text-right sm:table-cell">Último ano</TableHead>
+                <TableHead className="hidden text-right sm:table-cell">vs cidade</TableHead>
+                <TableHead className="hidden text-right md:table-cell">Último ano</TableHead>
                 <TableHead className="w-8" />
               </TableRow>
             </TableHeader>
@@ -71,7 +73,21 @@ export default async function BairrosPage() {
                   <TableCell className="text-right font-mono tabular-nums">
                     {rsm2(b.medianRsm2)}
                   </TableCell>
-                  <TableCell className="hidden text-right text-muted-foreground sm:table-cell">
+                  <TableCell className="hidden text-right sm:table-cell">
+                    {overview.medianRsm2 > 0 && (
+                      <Badge
+                        variant="outline"
+                        className={
+                          b.medianRsm2 < overview.medianRsm2
+                            ? "border-transparent bg-emerald-500/15 font-mono text-emerald-700 dark:text-emerald-400"
+                            : "font-mono"
+                        }
+                      >
+                        {formatPct((b.medianRsm2 / overview.medianRsm2 - 1) * 100)}
+                      </Badge>
+                    )}
+                  </TableCell>
+                  <TableCell className="hidden text-right text-muted-foreground md:table-cell">
                     {b.yearMax}
                   </TableCell>
                   <TableCell className="text-right">

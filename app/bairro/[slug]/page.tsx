@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronLeft, Search } from "lucide-react";
@@ -8,7 +9,8 @@ import { TrendChart } from "@/components/trend-chart";
 import { BenchmarkMatrix } from "@/components/benchmark-matrix";
 import { TransactionsTable, TxRow } from "@/components/transactions-table";
 import { bairroDisplay } from "@/lib/bairros";
-import { formatArea, formatNumber, money, rsm2 } from "@/lib/format";
+import { formatArea, formatNumber, formatPct, money, rsm2 } from "@/lib/format";
+import { slugify } from "@/lib/data";
 import {
   getBairros,
   getBenchmarks,
@@ -19,24 +21,35 @@ import {
 
 export const dynamic = "force-dynamic";
 
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const bairros = await getBairros();
+  const meta = bairros.find((b) => slugify(b.bairroNorm) === slug);
+  return { title: meta ? bairroDisplay(meta.bairro) : "Bairro" };
+}
+
 export default async function BairroPage({
   params,
 }: {
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const bairroNorm = slug.replace(/-/g, " ");
 
-  const [bairros, overview, trend, benchCells, recent] = await Promise.all([
-    getBairros(),
+  const bairros = await getBairros();
+  const meta = bairros.find((b) => slugify(b.bairroNorm) === slug);
+  if (!meta) notFound();
+  const bairroNorm = meta.bairroNorm;
+
+  const [overview, trend, benchCells, recent] = await Promise.all([
     getOverview({ bairroNorm }),
     getTrend({ bairroNorm }),
     getBenchmarks(bairroNorm),
     getRecentTransactions(bairroNorm),
   ]);
-
-  const meta = bairros.find((b) => b.bairroNorm === bairroNorm);
-  if (!meta) notFound();
 
   const display = bairroDisplay(meta.bairro);
   const cellLookup = new Map(benchCells.map((c) => [`${c.tier}|${c.band}`, c]));
@@ -59,9 +72,19 @@ export default async function BairroPage({
       tier: r.tier,
       band: r.band,
       situacao: r.situacao,
+      logradouro: r.logradouro,
+      nEndereco: r.nEndereco,
       comp,
     };
   });
+
+  const withVol = trend.filter((t) => t.n > 0 && t.year <= 2025);
+  const lastFull = withVol[withVol.length - 1];
+  const prevFull = withVol[withVol.length - 2];
+  const yoy =
+    lastFull && prevFull && prevFull.median > 0
+      ? ((lastFull.median / prevFull.median) - 1) * 100
+      : null;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
@@ -89,7 +112,11 @@ export default async function BairroPage({
         <StatCard
           label="Mediana R$/m²"
           value={rsm2(overview.medianRsm2)}
-          hint="todos os anos"
+          hint={
+            yoy !== null && lastFull
+              ? `${formatPct(yoy)} em ${lastFull.year} vs ${lastFull.year - 1}`
+              : "todos os anos"
+          }
         />
         <StatCard
           label="Valor mediano"
@@ -103,12 +130,15 @@ export default async function BairroPage({
           <CardHeader>
             <CardTitle>Mediana R$/m² por ano</CardTitle>
             <CardDescription>
-              {display} ·{" "}
+              {display} vs IPCA nacional ·{" "}
               {trend[trend.length - 1]?.year === 2026 ? "2026 parcial" : "série completa"}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <TrendChart data={trend} />
+            <p className="mt-2 text-[11px] text-muted-foreground">
+              Pontilhado: 1º ano da série neste bairro × IPCA nacional.
+            </p>
           </CardContent>
         </Card>
 
@@ -134,7 +164,7 @@ export default async function BairroPage({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <TransactionsTable rows={rows} />
+          <TransactionsTable rows={rows} showAddress />
         </CardContent>
       </Card>
     </div>

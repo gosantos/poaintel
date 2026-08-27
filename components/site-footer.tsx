@@ -17,6 +17,9 @@ export function SiteFooter() {
           .
         </p>
         <div className="flex gap-4">
+          <Link href="/insights" className="hover:text-foreground">
+            Intel
+          </Link>
           <Link href="/sobre" className="hover:text-foreground">
             Metodologia
           </Link>

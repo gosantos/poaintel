@@ -85,7 +85,10 @@ export default function SobrePage() {
                 </ul>
               </div>
             </div>
-            Células com menos de 3 transações não geram mediana.
+            Células com menos de 3 transações não geram mediana. Na cidade
+            inteira o m² do XL pode sair mais caro que o do studio — o estoque
+            grande está nos bairros caros. Por isso a célula, não a mediana
+            geral.
           </CardContent>
         </Card>
 
@@ -130,6 +133,13 @@ export default function SobrePage() {
               <li>2026 é um ano parcial.</li>
               <li>A base de cálculo pode diferir do preço negociado (ITBI tem piso fiscal).</li>
               <li>A série começa em 2020 — sem dados anteriores.</li>
+              <li>Médias de R$/m² e área são distorcidas por outliers; usamos medianas.</li>
+              <li>Busca de rua ignora maiúsculas/acentos e aproxima erros com distância de Levenshtein.</li>
+              <li>
+                A linha de IPCA reajusta a mediana do primeiro ano da série pela
+                variação oficial do índice (IBGE, série BCB SGS 433). 2026 usa o
+                acumulado até julho.
+              </li>
             </ul>
           </CardContent>
         </Card>

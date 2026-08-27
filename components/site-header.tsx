@@ -1,16 +1,18 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
-import { Moon, Sun, Search, BarChart3, MapPinned } from "lucide-react";
+import { Moon, Sun, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const links = [
-  { href: "/", label: "Mercado", icon: BarChart3 },
-  { href: "/busca", label: "Busca", icon: Search },
-  { href: "/bairros", label: "Bairros", icon: MapPinned },
+  { href: "/", label: "Mercado" },
+  { href: "/insights", label: "Intel" },
+  { href: "/busca", label: "Busca" },
+  { href: "/bairros", label: "Bairros" },
 ];
 
 export function SiteHeader() {
@@ -39,8 +41,19 @@ export function SiteHeader() {
 }
 
 function NavLink({ href, label }: { href: string; label: string }) {
+  const pathname = usePathname();
+  const active =
+    href === "/"
+      ? pathname === "/"
+      : pathname === href || pathname.startsWith(`${href}/`);
   return (
-    <Button variant="ghost" size="sm" nativeButton={false} render={<Link href={href} />}>
+    <Button
+      variant="ghost"
+      size="sm"
+      nativeButton={false}
+      render={<Link href={href} />}
+      className={active ? "bg-muted" : "text-muted-foreground"}
+    >
       {label}
     </Button>
   );

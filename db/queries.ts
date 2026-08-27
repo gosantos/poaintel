@@ -1,10 +1,12 @@
 import { sql, type SQL } from "drizzle-orm";
+import { matchStreets, type StreetHit } from "@/lib/fuzzy";
 import { db } from "./client";
 import { transactions, type Transaction } from "./schema";
 
 export interface TxFilters {
   bairroNorm?: string;
   ruaNorm?: string;
+  ruaNorms?: string[];
   numero?: string;
   years?: number[];
   minM2?: number;
@@ -15,7 +17,16 @@ export function buildWhere(f: TxFilters): SQL | null {
   const conds: SQL[] = [];
   conds.push(sql`base_de_calculo > 0 AND area_constr_privativa > 0`);
   if (f.bairroNorm) conds.push(sql`bairro_norm = ${f.bairroNorm}`);
-  if (f.ruaNorm) conds.push(sql`logradouro_norm LIKE ${`%${f.ruaNorm}%`}`);
+  if (f.ruaNorms && f.ruaNorms.length > 0) {
+    conds.push(
+      sql`logradouro_norm IN (${sql.join(
+        f.ruaNorms.map((s) => sql`${s}`),
+        sql`, `,
+      )})`,
+    );
+  } else if (f.ruaNorm) {
+    conds.push(sql`logradouro_norm LIKE ${`%${f.ruaNorm}%`}`);
+  }
   if (f.numero) conds.push(sql`n_endereco = ${f.numero}`);
   if (f.years && f.years.length > 0)
     conds.push(sql`year IN (${sql.join(f.years.map((y) => sql`${y}`), sql`, `)})`);
@@ -201,11 +212,11 @@ export async function getTopBairros(
       FROM transactions
       WHERE base_de_calculo > 0 AND area_constr_privativa > 0 ${yearCond}
     )
-    SELECT bairro, bairro_norm, n,
+    SELECT MAX(bairro) AS bairro, bairro_norm, n,
       AVG(CASE WHEN rn IN ((n + 1) / 2, (n + 2) / 2) THEN rsm2 END) AS median_rsm2,
       MAX(year) AS year_max
     FROM ranked
-    GROUP BY bairro, bairro_norm, n
+    GROUP BY bairro_norm, n
     ORDER BY n DESC
     LIMIT ${limit}
   `);
@@ -219,26 +230,7 @@ export async function getTopBairros(
 }
 
 export async function getBairros(limit = 500): Promise<BairroSummary[]> {
-  const rows = await db
-    .select({
-      bairro: transactions.bairro,
-      bairroNorm: transactions.bairroNorm,
-      n: sql<number>`COUNT(*)`,
-      medianRsm2: sql<number>`AVG(rsm2)`,
-      yearMax: sql<number>`MAX(year)`,
-    })
-    .from(transactions)
-    .groupBy(transactions.bairroNorm)
-    .orderBy(sql`COUNT(*) DESC`)
-    .limit(limit)
-    .all();
-  return rows.map((r) => ({
-    bairro: r.bairro,
-    bairroNorm: r.bairroNorm,
-    n: Number(r.n),
-    medianRsm2: Number(r.medianRsm2),
-    yearMax: Number(r.yearMax),
-  }));
+  return getTopBairros(limit);
 }
 
 export async function getRecentTransactions(
@@ -271,4 +263,228 @@ export async function countTransactions(f: TxFilters): Promise<number> {
   if (!where) return 0;
   const row = await db.get<{ n: number }>(sql`SELECT COUNT(*) AS n FROM transactions WHERE ${where}`);
   return Number(row?.n ?? 0);
+}
+
+export interface StreetCatalogRow {
+  logradouro: string;
+  logradouroNorm: string;
+}
+
+let streetCatalog: StreetCatalogRow[] | null = null;
+
+export async function getStreetCatalog(): Promise<StreetCatalogRow[]> {
+  if (streetCatalog) return streetCatalog;
+  const rows = await db.all<{ logradouro: string; logradouro_norm: string }>(sql`
+    SELECT logradouro_norm, MIN(logradouro) AS logradouro
+    FROM transactions
+    GROUP BY logradouro_norm
+  `);
+  streetCatalog = rows.map((r) => ({
+    logradouro: r.logradouro,
+    logradouroNorm: r.logradouro_norm,
+  }));
+  return streetCatalog;
+}
+
+export interface ResolvedStreet extends StreetHit {
+  logradouro: string;
+}
+
+export async function resolveStreetQuery(query: string): Promise<ResolvedStreet[]> {
+  const catalog = await getStreetCatalog();
+  const hits = matchStreets(
+    query,
+    catalog.map((c) => c.logradouroNorm),
+  );
+  const byNorm = new Map(catalog.map((c) => [c.logradouroNorm, c.logradouro]));
+  return hits.map((h) => ({
+    ...h,
+    logradouro: byNorm.get(h.logradouroNorm) ?? h.logradouroNorm,
+  }));
+}
+
+export interface Percentiles {
+  p10: number;
+  p25: number;
+  p50: number;
+  p75: number;
+  p90: number;
+  n: number;
+}
+
+export async function getPercentiles(f?: TxFilters): Promise<Percentiles> {
+  const where = buildWhere(f ?? {}) ?? sql`1 = 1`;
+  const countRow = await db.get<{ n: number }>(
+    sql`SELECT COUNT(*) AS n FROM transactions WHERE ${where}`,
+  );
+  const n = Number(countRow?.n ?? 0);
+  if (n === 0) return { p10: 0, p25: 0, p50: 0, p75: 0, p90: 0, n: 0 };
+
+  const at = async (p: number) => {
+    const off = Math.max(0, Math.min(n - 1, Math.floor((n - 1) * p)));
+    const row = await db.get<{ v: number }>(sql`
+      SELECT rsm2 AS v FROM transactions WHERE ${where}
+      ORDER BY rsm2 LIMIT 1 OFFSET ${off}
+    `);
+    return Number(row?.v ?? 0);
+  };
+
+  const [p10, p25, p50, p75, p90] = await Promise.all([
+    at(0.1),
+    at(0.25),
+    at(0.5),
+    at(0.75),
+    at(0.9),
+  ]);
+  return { p10, p25, p50, p75, p90, n };
+}
+
+export interface GroupStat {
+  key: string;
+  n: number;
+  medianRsm2: number;
+}
+
+export async function getGroupStats(
+  group: "tier" | "band",
+): Promise<GroupStat[]> {
+  const col = group === "tier" ? "tier" : "band";
+  const rows = await db.all<Record<string, number | string>>(sql`
+    WITH ranked AS (
+      SELECT COALESCE(${sql.raw(col)}, '?') AS k, rsm2,
+        ROW_NUMBER() OVER (PARTITION BY COALESCE(${sql.raw(col)}, '?') ORDER BY rsm2) AS rn,
+        COUNT(*) OVER (PARTITION BY COALESCE(${sql.raw(col)}, '?')) AS n
+      FROM transactions
+      WHERE base_de_calculo > 0 AND area_constr_privativa > 0
+    )
+    SELECT k, n,
+      AVG(CASE WHEN rn IN ((n + 1) / 2, (n + 2) / 2) THEN rsm2 END) AS median_rsm2
+    FROM ranked
+    GROUP BY k, n
+  `);
+  return rows.map((r) => ({
+    key: String(r.k),
+    n: Number(r.n),
+    medianRsm2: Number(r.median_rsm2),
+  }));
+}
+
+export interface BairroMover {
+  bairro: string;
+  bairroNorm: string;
+  n0: number;
+  n1: number;
+  med0: number;
+  med1: number;
+  yoy: number;
+}
+
+export async function getBairroMovers(
+  year0 = 2024,
+  year1 = 2025,
+  minN = 30,
+): Promise<BairroMover[]> {
+  const rows = await db.all<Record<string, number | string>>(sql`
+    WITH ranked AS (
+      SELECT bairro, bairro_norm, year, rsm2,
+        ROW_NUMBER() OVER (PARTITION BY bairro_norm, year ORDER BY rsm2) AS rn,
+        COUNT(*) OVER (PARTITION BY bairro_norm, year) AS n
+      FROM transactions
+      WHERE base_de_calculo > 0 AND area_constr_privativa > 0
+        AND year IN (${year0}, ${year1})
+    ),
+    med AS (
+      SELECT MAX(bairro) AS bairro, bairro_norm, year, n,
+        AVG(CASE WHEN rn IN ((n + 1) / 2, (n + 2) / 2) THEN rsm2 END) AS med
+      FROM ranked
+      GROUP BY bairro_norm, year, n
+      HAVING n >= ${minN}
+    )
+    SELECT a.bairro, a.bairro_norm,
+      a.n AS n0, a.med AS med0, b.n AS n1, b.med AS med1,
+      (b.med / a.med - 1) * 100 AS yoy
+    FROM med a
+    JOIN med b ON a.bairro_norm = b.bairro_norm AND a.year = ${year0} AND b.year = ${year1}
+    WHERE a.med > 0
+    ORDER BY yoy DESC
+  `);
+  return rows.map((r) => ({
+    bairro: String(r.bairro),
+    bairroNorm: String(r.bairro_norm),
+    n0: Number(r.n0),
+    n1: Number(r.n1),
+    med0: Number(r.med0),
+    med1: Number(r.med1),
+    yoy: Number(r.yoy),
+  }));
+}
+
+export async function getBairrosByMedian(
+  order: "asc" | "desc",
+  limit = 8,
+  minN = 80,
+): Promise<BairroSummary[]> {
+  const dir = order === "asc" ? sql`ASC` : sql`DESC`;
+  const rows = await db.all<Record<string, number | string>>(sql`
+    WITH ranked AS (
+      SELECT bairro, bairro_norm, year, rsm2,
+        ROW_NUMBER() OVER (PARTITION BY bairro_norm ORDER BY rsm2) AS rn,
+        COUNT(*) OVER (PARTITION BY bairro_norm) AS n
+      FROM transactions
+      WHERE base_de_calculo > 0 AND area_constr_privativa > 0
+    )
+    SELECT MAX(bairro) AS bairro, bairro_norm, n,
+      AVG(CASE WHEN rn IN ((n + 1) / 2, (n + 2) / 2) THEN rsm2 END) AS median_rsm2,
+      MAX(year) AS year_max
+    FROM ranked
+    GROUP BY bairro_norm, n
+    HAVING n >= ${minN}
+    ORDER BY median_rsm2 ${dir}
+    LIMIT ${limit}
+  `);
+  return rows.map((r) => ({
+    bairro: String(r.bairro),
+    bairroNorm: String(r.bairro_norm),
+    n: Number(r.n),
+    medianRsm2: Number(r.median_rsm2),
+    yearMax: Number(r.year_max),
+  }));
+}
+
+export interface BairroYearCell {
+  bairro: string;
+  bairroNorm: string;
+  year: number;
+  n: number;
+  medianRsm2: number;
+  nAll: number;
+}
+
+export async function getBairroYearMatrix(
+  minYearN = 10,
+  minAll = 40,
+): Promise<BairroYearCell[]> {
+  const rows = await db.all<Record<string, number | string>>(sql`
+    WITH ranked AS (
+      SELECT bairro, bairro_norm, year, rsm2,
+        ROW_NUMBER() OVER (PARTITION BY bairro_norm, year ORDER BY rsm2) AS rn,
+        COUNT(*) OVER (PARTITION BY bairro_norm, year) AS n_year,
+        COUNT(*) OVER (PARTITION BY bairro_norm) AS n_all
+      FROM transactions
+      WHERE base_de_calculo > 0 AND area_constr_privativa > 0
+    )
+    SELECT MAX(bairro) AS bairro, bairro_norm, year, n_year, n_all,
+      AVG(CASE WHEN rn IN ((n_year + 1) / 2, (n_year + 2) / 2) THEN rsm2 END) AS median_rsm2
+    FROM ranked
+    WHERE n_all >= ${minAll} AND n_year >= ${minYearN}
+    GROUP BY bairro_norm, year, n_year, n_all
+  `);
+  return rows.map((r) => ({
+    bairro: String(r.bairro),
+    bairroNorm: String(r.bairro_norm),
+    year: Number(r.year),
+    n: Number(r.n_year),
+    medianRsm2: Number(r.median_rsm2),
+    nAll: Number(r.n_all),
+  }));
 }

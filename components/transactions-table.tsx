@@ -22,6 +22,8 @@ export interface TxRow {
   tier: string | null;
   band: string | null;
   situacao: string;
+  logradouro?: string | null;
+  nEndereco?: string | null;
   comp: { pct: number; p50: number } | null;
 }
 
@@ -41,13 +43,20 @@ export function CompBadge({ pct }: { pct: number }) {
   );
 }
 
-export function TransactionsTable({ rows }: { rows: TxRow[] }) {
+export function TransactionsTable({
+  rows,
+  showAddress = false,
+}: {
+  rows: TxRow[];
+  showAddress?: boolean;
+}) {
   return (
     <div className="overflow-x-auto">
       <Table>
         <TableHeader>
           <TableRow>
             <TableHead>Data</TableHead>
+            {showAddress && <TableHead>Endereço</TableHead>}
             <TableHead>Apto</TableHead>
             <TableHead className="text-right">Área</TableHead>
             <TableHead className="text-right">Base</TableHead>
@@ -61,6 +70,13 @@ export function TransactionsTable({ rows }: { rows: TxRow[] }) {
               <TableCell className="font-mono text-xs">
                 {fullDate(r.dataEstimativa)}
               </TableCell>
+              {showAddress && (
+                <TableCell className="max-w-48 truncate text-xs">
+                  {r.logradouro
+                    ? `${r.logradouro}${r.nEndereco ? `, ${r.nEndereco}` : ""}`
+                    : "—"}
+                </TableCell>
+              )}
               <TableCell>
                 <div className="flex items-center gap-2">
                   <span>{r.nUnidade || "—"}</span>

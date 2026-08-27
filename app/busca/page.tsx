@@ -4,7 +4,7 @@ import { SearchX } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { SearchForm } from "@/components/search-form";
-import { TransactionsTable, TxRow } from "@/components/transactions-table";
+import { CompBadge, TransactionsTable, TxRow } from "@/components/transactions-table";
 import { BenchmarkMatrix } from "@/components/benchmark-matrix";
 import { bairroDisplay } from "@/lib/bairros";
 import { formatNumber, money, rsm2 } from "@/lib/format";
@@ -13,7 +13,10 @@ import { searchSchema } from "@/lib/search";
 import {
   getBairros,
   getBenchmarks,
+  getOverview,
+  resolveStreetQuery,
   searchTransactions,
+  type ResolvedStreet,
 } from "@/db/queries";
 import type { Transaction } from "@/db/schema";
 
@@ -57,18 +60,33 @@ export default async function BuscaPage({
     parsed.success &&
     (parsed.data.rua || parsed.data.numero || bairroNorm);
 
+  let streetHits: ResolvedStreet[] = [];
+  if (parsed.success && parsed.data.rua) {
+    streetHits = await resolveStreetQuery(parsed.data.rua);
+  }
+  const ruaNorms = streetHits.map((h) => h.logradouroNorm);
+  const fuzzyOnly =
+    streetHits.length > 0 && streetHits.every((h) => h.method === "fuzzy");
+
   let rows: Transaction[] = [];
   let bairrosPresent: string[] = [];
+  let resultOverview = null;
   if (hasQuery) {
-    rows = await searchTransactions({
-      ruaNorm: parsed.success && parsed.data.rua ? norm(parsed.data.rua) : undefined,
+    const filters = {
+      ruaNorms: fuzzyOnly ? ruaNorms : undefined,
+      ruaNorm:
+        !fuzzyOnly && parsed.success && parsed.data.rua
+          ? norm(parsed.data.rua)
+          : undefined,
       numero: parsed.success ? parsed.data.numero : undefined,
       bairroNorm,
       years,
       minM2,
       maxM2,
-    });
+    };
+    rows = await searchTransactions(filters);
     bairrosPresent = [...new Set(rows.map((r) => r.bairroNorm))].sort();
+    if (rows.length > 0) resultOverview = await getOverview(filters);
   }
 
   const mainBairro = bairroNorm ?? bairrosPresent[0];
@@ -127,7 +145,7 @@ export default async function BuscaPage({
           <CardContent className="flex flex-col items-center gap-3 py-16 text-center">
             <SearchX className="size-10 text-muted-foreground" />
             <p className="text-sm text-muted-foreground">
-              Digite uma rua ou selecione um bairro para começar.
+              Digite uma rua (aceita erro de digitação) ou selecione um bairro.
             </p>
           </CardContent>
         </Card>
@@ -150,6 +168,27 @@ export default async function BuscaPage({
 
       {hasQuery && rows.length > 0 && (
         <div className="mt-8 space-y-6">
+          {fuzzyOnly && (
+            <p className="text-sm text-muted-foreground">
+              Nenhuma rua exata. Ruas próximas (Levenshtein, sem maiúsculas/acentos):{" "}
+              {streetHits.map((h) => h.logradouro).join(" · ")}
+            </p>
+          )}
+
+          {resultOverview && (
+            <div className="flex flex-wrap gap-3 text-sm">
+              <Badge variant="outline" className="font-mono">
+                mediana {rsm2(resultOverview.medianRsm2)}
+              </Badge>
+              <Badge variant="outline" className="font-mono">
+                {money(resultOverview.medianFullBase)} / imóvel
+              </Badge>
+              <Badge variant="outline">
+                {resultOverview.yearMin}–{resultOverview.yearMax}
+              </Badge>
+            </div>
+          )}
+
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
             <h2 className="text-xl font-semibold tracking-tight">{title}</h2>
             <Badge variant="secondary" className="font-mono">
@@ -304,16 +343,7 @@ function UnitTable({ rows }: { rows: TxRow[] }) {
                 </td>
                 <td className="py-2 pr-4 text-right">
                   {comp ? (
-                    <Badge
-                      variant={comp.pct <= 0 ? "secondary" : "outline"}
-                      className={
-                        comp.pct <= 0
-                          ? "border-transparent bg-emerald-500/15 font-mono text-emerald-700 dark:text-emerald-400"
-                          : "font-mono text-amber-700 dark:text-amber-400"
-                      }
-                    >
-                      {comp.pct.toLocaleString("pt-BR", { maximumFractionDigits: 0, signDisplay: "always" })}%
-                    </Badge>
+                    <CompBadge pct={comp.pct} />
                   ) : (
                     <span className="text-muted-foreground">—</span>
                   )}

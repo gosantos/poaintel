@@ -1,0 +1,78 @@
+"use client";
+
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  type ChartConfig,
+} from "@/components/ui/chart";
+import { formatNumber, rsm2 } from "@/lib/format";
+
+const chartConfig = {
+  median: { label: "Mediana R$/m²", color: "var(--chart-1)" },
+} satisfies ChartConfig;
+
+export function GroupBarChart({
+  data,
+  className,
+}: {
+  data: { label: string; n: number; medianRsm2: number }[];
+  className?: string;
+}) {
+  const chartData = data.map((d) => ({ ...d, median: d.medianRsm2 }));
+
+  return (
+    <ChartContainer
+      config={chartConfig}
+      className={className}
+      initialDimension={{ width: 600, height: 220 }}
+    >
+      <BarChart
+        data={chartData}
+        layout="vertical"
+        accessibilityLayer
+        margin={{ left: 4, right: 12 }}
+      >
+        <CartesianGrid horizontal={false} />
+        <XAxis
+          type="number"
+          tickLine={false}
+          axisLine={false}
+          tickFormatter={(v: number) => formatNumber(v)}
+        />
+        <YAxis
+          type="category"
+          dataKey="label"
+          tickLine={false}
+          axisLine={false}
+          width={110}
+          tick={{ fontSize: 11 }}
+        />
+        <ChartTooltip
+          cursor={false}
+          content={
+            <ChartTooltipContent
+              formatter={(value, name, item) => {
+                if (name !== "median") return null;
+                const n = (item?.payload as { n?: number })?.n;
+                return (
+                  <div className="flex flex-col gap-0.5">
+                    <span className="font-mono tabular-nums">
+                      {rsm2(Number(value))}
+                    </span>
+                    <span className="text-muted-foreground">
+                      {formatNumber(n ?? 0)} transações
+                    </span>
+                  </div>
+                );
+              }}
+              labelKey="label"
+            />
+          }
+        />
+        <Bar dataKey="median" fill="var(--color-median)" radius={4} maxBarSize={22} />
+      </BarChart>
+    </ChartContainer>
+  );
+}

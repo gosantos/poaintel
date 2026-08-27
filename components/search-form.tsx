@@ -88,11 +88,15 @@ export function SearchForm({ bairros }: { bairros: BairroOption[] }) {
       </div>
       <div className="grid gap-1.5">
         <Label>Bairro</Label>
-        <Select value={bairro} onValueChange={(v) => setBairro(v ?? "")}>
+        <Select
+          value={bairro}
+          onValueChange={(v) => setBairro(!v || v === "__any" ? "" : v)}
+        >
           <SelectTrigger>
             <SelectValue placeholder="Qualquer bairro" />
           </SelectTrigger>
           <SelectContent className="max-h-72">
+            <SelectItem value="__any">Qualquer bairro</SelectItem>
             {bairros.map((b) => (
               <SelectItem key={b.bairroNorm} value={b.bairroNorm}>
                 {bairroDisplay(b.bairro)}
@@ -103,7 +107,10 @@ export function SearchForm({ bairros }: { bairros: BairroOption[] }) {
       </div>
       <div className="grid gap-1.5">
         <Label>Ano</Label>
-        <Select value={ano} onValueChange={(v) => setAno(v ?? "")}>
+        <Select
+          value={ano}
+          onValueChange={(v) => setAno(!v || v === "__all" ? "" : v)}
+        >
           <SelectTrigger>
             <SelectValue placeholder="Todos" />
           </SelectTrigger>

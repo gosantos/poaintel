@@ -25,6 +25,8 @@ import { BairroRankChart } from "@/components/bairro-rank-chart";
 import { bairroDisplay } from "@/lib/bairros";
 import { formatArea, formatNumber, formatPct, money, rsm2 } from "@/lib/format";
 import {
+  getBairroMovers,
+  getBairrosByMedian,
   getOverview,
   getTopBairros,
   getTrend,
@@ -34,19 +36,31 @@ import { slugify } from "@/lib/data";
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const [overview, trend, topBairros] = await Promise.all([
+  const [overview, trend, topBairros, high, low, movers] = await Promise.all([
     getOverview(),
     getTrend({}),
     getTopBairros(12),
+    getBairrosByMedian("desc", 2, 80),
+    getBairrosByMedian("asc", 1, 80),
+    getBairroMovers(2024, 2025, 30),
   ]);
+  const hot = movers.filter((m) => m.yoy > 25).slice(0, 3);
 
   const withVolume = trend.filter((t) => t.n > 0);
-  const last = withVolume[withVolume.length - 1];
-  const prev = withVolume[withVolume.length - 2];
+  const fullYears = withVolume.filter((t) => t.year <= 2025);
+  const last = fullYears[fullYears.length - 1] ?? withVolume[withVolume.length - 1];
+  const prev = fullYears[fullYears.length - 2];
   const yoy =
     last && prev && prev.median > 0
       ? ((last.median / prev.median) - 1) * 100
       : null;
+  const y2020 = withVolume.find((t) => t.year === 2020);
+  const price5y =
+    y2020 && last && y2020.median > 0
+      ? ((last.median / y2020.median) - 1) * 100
+      : null;
+  const vol5y =
+    y2020 && last && y2020.n > 0 ? ((last.n / y2020.n) - 1) * 100 : null;
 
   return (
     <div className="relative">
@@ -84,7 +98,11 @@ export default async function HomePage() {
           <StatCard
             label="Mediana R$/m²"
             value={rsm2(overview.medianRsm2)}
-            hint={yoy !== null ? `${formatPct(yoy)} vs ano anterior` : undefined}
+            hint={
+              yoy !== null && last
+                ? `${formatPct(yoy)} em ${last.year} vs ${last.year - 1}`
+                : undefined
+            }
             icon={<CircleDollarSign className="size-4" />}
           />
           <StatCard
@@ -106,12 +124,16 @@ export default async function HomePage() {
             <CardHeader>
               <CardTitle>Mediana R$/m² por ano</CardTitle>
               <CardDescription>
-                Preço mediano dos apartamentos vendidos na cidade
-                {last && last.year === 2026 ? ` · ${last.year} parcial` : ""}
+                Mediana da cidade vs IPCA (1º ano corrigido)
+                {withVolume[withVolume.length - 1]?.year === 2026 ? " · 2026 parcial" : ""}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <TrendChart data={trend} />
+              <p className="mt-2 text-[11px] text-muted-foreground">
+                Pontilhado: mediana do primeiro ano da série atualizada pelo
+                IPCA (IBGE / BCB SGS 433). 2026: IPCA até julho.
+              </p>
             </CardContent>
           </Card>
           <Card>
@@ -211,6 +233,76 @@ export default async function HomePage() {
                   })}
                 </TableBody>
               </Table>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
+        <div className="flex items-end justify-between gap-4">
+          <div>
+            <h2 className="text-xl font-semibold tracking-tight">
+              Leitura do mercado
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Volume subiu; a mediana da cidade quase não. A polarização está
+              nos bairros.
+            </p>
+          </div>
+          <Link
+            href="/insights"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+          >
+            Briefing completo <ArrowRight className="size-4" />
+          </Link>
+        </div>
+        <div className="mt-4 grid gap-4 sm:grid-cols-3">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Cinco anos, pouco preço</CardTitle>
+            </CardHeader>
+            <CardContent className="text-sm text-muted-foreground">
+              {price5y !== null && vol5y !== null ? (
+                <>
+                  Mediana {formatPct(price5y)} de 2020 a {last?.year}. Volume{" "}
+                  {formatPct(vol5y)}. O ITBI aqueceu em transações, não no
+                  R$/m² da cidade.
+                </>
+              ) : (
+                <>Série 2020–2026 de vendas reais de apartamentos.</>
+              )}
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">A mediana mente o bairro</CardTitle>
+            </CardHeader>
+            <CardContent className="text-sm text-muted-foreground">
+              {high[0] && low[0] ? (
+                <>
+                  {bairroDisplay(high[0].bairro)} medeia {rsm2(high[0].medianRsm2)};{" "}
+                  {bairroDisplay(low[0].bairro)}, {rsm2(low[0].medianRsm2)}. Compare
+                  célula a célula, não com a cidade.
+                </>
+              ) : (
+                <>O R$/m² muda mais entre bairros do que a mediana da cidade sugere.</>
+              )}
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">2024–25 foi desigual</CardTitle>
+            </CardHeader>
+            <CardContent className="text-sm text-muted-foreground">
+              {hot.length > 0 ? (
+                <>
+                  {hot.map((m) => bairroDisplay(m.bairro)).join(", ")} subiram mais
+                  de 25% na mediana. Outros recuaram. O briefing tem a tabela
+                  inteira.
+                </>
+              ) : (
+                <>A variação 2024–2025 não foi uniforme entre bairros.</>
+              )}
             </CardContent>
           </Card>
         </div>
