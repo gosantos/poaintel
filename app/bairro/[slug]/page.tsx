@@ -11,6 +11,7 @@ import { TransactionsTable, TxRow } from "@/components/transactions-table";
 import { bairroDisplay } from "@/lib/bairros";
 import { formatArea, formatNumber, formatPct, money, rsm2 } from "@/lib/format";
 import { slugify } from "@/lib/data";
+import { pctChange, vsBenchmark } from "@/lib/market";
 import {
   getBairros,
   getBenchmarks,
@@ -56,10 +57,7 @@ export default async function BairroPage({
 
   const rows: TxRow[] = recent.map((r) => {
     const cell = cellLookup.get(`${r.tier}|${r.band}`);
-    const comp =
-      cell && cell.p50 > 0
-        ? { pct: (r.rsm2 / cell.p50 - 1) * 100, p50: cell.p50 }
-        : null;
+    const comp = vsBenchmark(r.rsm2, cell?.p50);
     return {
       id: r.id,
       year: r.year,
@@ -82,9 +80,7 @@ export default async function BairroPage({
   const lastFull = withVol[withVol.length - 1];
   const prevFull = withVol[withVol.length - 2];
   const yoy =
-    lastFull && prevFull && prevFull.median > 0
-      ? ((lastFull.median / prevFull.median) - 1) * 100
-      : null;
+    lastFull && prevFull ? pctChange(prevFull.median, lastFull.median) : null;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
@@ -130,14 +126,15 @@ export default async function BairroPage({
           <CardHeader>
             <CardTitle>Mediana R$/m² por ano</CardTitle>
             <CardDescription>
-              {display} vs IPCA nacional ·{" "}
+              {display} e IPCA nacional ·{" "}
               {trend[trend.length - 1]?.year === 2026 ? "2026 parcial" : "série completa"}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <TrendChart data={trend} />
             <p className="mt-2 text-[11px] text-muted-foreground">
-              Pontilhado: 1º ano da série neste bairro × IPCA nacional.
+              A linha pontilhada é o primeiro ano da série neste bairro,
+              atualizado pelo IPCA nacional.
             </p>
           </CardContent>
         </Card>
@@ -146,7 +143,7 @@ export default async function BairroPage({
           <CardHeader>
             <CardTitle>Benchmark por construção × tamanho</CardTitle>
             <CardDescription>
-              Mediana R$/m² (p50) por célula, com nº de transações
+              Mediana R$/m² (p50) por célula e número de transações
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -160,7 +157,7 @@ export default async function BairroPage({
           <CardTitle className="text-base">Transações recentes</CardTitle>
           <CardDescription>
             Últimas {rows.length} vendas em {display}, comparadas com o
-            benchmark do bairro
+            benchmark do bairro.
           </CardDescription>
         </CardHeader>
         <CardContent>

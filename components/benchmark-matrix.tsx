@@ -1,4 +1,4 @@
-import { bandLabel, tierLabel } from "@/lib/data";
+import { bandLabel, TIERS, tierLabel } from "@/lib/data";
 import { formatNumber, rsm2 } from "@/lib/format";
 import {
   Table,
@@ -18,7 +18,6 @@ export interface BenchmarkCellData {
   p75: number;
 }
 
-const TIERS = ["pre-1950", "A", "B", "C", "D"] as const;
 const BANDS = ["S", "M", "L", "XL"] as const;
 
 export function BenchmarkMatrix({

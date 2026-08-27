@@ -17,11 +17,11 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "ITBI Intel — Inteligência imobiliária de Porto Alegre",
+    default: "ITBI Intel · Inteligência imobiliária de Porto Alegre",
     template: "%s · ITBI Intel",
   },
   description:
-    "Preços reais de venda de apartamentos em Porto Alegre a partir do ITBI. Pesquise por endereço, compare com o bairro e acompanhe o mercado.",
+    "Preços reais de venda de apartamentos em Porto Alegre, a partir do ITBI. Pesquise um endereço, compare com o bairro e acompanhe o mercado.",
   metadataBase: new URL("https://itbiintel.example.com"),
 };
 

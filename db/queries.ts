@@ -272,6 +272,10 @@ export interface StreetCatalogRow {
 
 let streetCatalog: StreetCatalogRow[] | null = null;
 
+export function resetStreetCatalog(): void {
+  streetCatalog = null;
+}
+
 export async function getStreetCatalog(): Promise<StreetCatalogRow[]> {
   if (streetCatalog) return streetCatalog;
   const rows = await db.all<{ logradouro: string; logradouro_norm: string }>(sql`
@@ -337,6 +341,37 @@ export async function getPercentiles(f?: TxFilters): Promise<Percentiles> {
     at(0.9),
   ]);
   return { p10, p25, p50, p75, p90, n };
+}
+
+export interface TierYearPoint {
+  year: number;
+  tier: string;
+  n: number;
+  median: number;
+}
+
+export async function getTierTrend(f: TxFilters = {}): Promise<TierYearPoint[]> {
+  const where = buildWhere(f) ?? sql`1 = 1`;
+  const rows = await db.all<Record<string, number | string>>(sql`
+    WITH ranked AS (
+      SELECT year, COALESCE(tier, '?') AS t, rsm2,
+        ROW_NUMBER() OVER (PARTITION BY year, COALESCE(tier, '?') ORDER BY rsm2) AS rn,
+        COUNT(*) OVER (PARTITION BY year, COALESCE(tier, '?')) AS n
+      FROM transactions
+      WHERE ${where}
+    )
+    SELECT year, t AS tier, n,
+      AVG(CASE WHEN rn IN ((n + 1) / 2, (n + 2) / 2) THEN rsm2 END) AS median
+    FROM ranked
+    GROUP BY year, t, n
+    ORDER BY year, t
+  `);
+  return rows.map((r) => ({
+    year: Number(r.year),
+    tier: String(r.tier),
+    n: Number(r.n),
+    median: Number(r.median),
+  }));
 }
 
 export interface GroupStat {

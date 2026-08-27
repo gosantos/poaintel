@@ -13,27 +13,31 @@ export function slugify(s: string): string {
   return norm(s).toLowerCase().replace(/\s+/g, "-");
 }
 
+export const TIERS = ["A", "B", "C", "D", "E"] as const;
+
 export function tier(year: number | null): string {
   if (!year) return "?";
-  if (year < 1950) return "pre-1950";
-  if (year <= 1969) return "A";
-  if (year <= 1989) return "B";
-  if (year <= 2009) return "C";
-  return "D";
+  if (year < 1970) return "A";
+  if (year < 1990) return "B";
+  if (year < 2010) return "C";
+  if (year < 2020) return "D";
+  return "E";
 }
 
 export function tierLabel(t: string): string {
   switch (t) {
-    case "pre-1950":
-      return "Pré-1950";
     case "A":
-      return "1950–69";
+      return "até 1969";
     case "B":
       return "1970–89";
     case "C":
       return "1990–2009";
     case "D":
-      return "2010+";
+      return "2010–19";
+    case "E":
+      return "2020+";
+    case "?":
+      return "Sem ano";
     default:
       return t;
   }

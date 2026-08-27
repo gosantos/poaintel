@@ -21,6 +21,7 @@ import { StatCard } from "@/components/stat-card";
 import { HomeSearch } from "@/components/home-search";
 import { TrendChart } from "@/components/trend-chart";
 import { VolumeChart } from "@/components/volume-chart";
+import { TierTrendChart, TierTrendTable } from "@/components/tier-trend-chart";
 import { BairroRankChart } from "@/components/bairro-rank-chart";
 import { bairroDisplay } from "@/lib/bairros";
 import { formatArea, formatNumber, formatPct, money, rsm2 } from "@/lib/format";
@@ -28,21 +29,24 @@ import {
   getBairroMovers,
   getBairrosByMedian,
   getOverview,
+  getTierTrend,
   getTopBairros,
   getTrend,
 } from "@/db/queries";
 import { slugify } from "@/lib/data";
+import { pctChange } from "@/lib/market";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const [overview, trend, topBairros, high, low, movers] = await Promise.all([
+  const [overview, trend, topBairros, high, low, movers, tierTrend] = await Promise.all([
     getOverview(),
     getTrend({}),
     getTopBairros(12),
     getBairrosByMedian("desc", 2, 80),
     getBairrosByMedian("asc", 1, 80),
     getBairroMovers(2024, 2025, 30),
+    getTierTrend(),
   ]);
   const hot = movers.filter((m) => m.yoy > 25).slice(0, 3);
 
@@ -50,17 +54,10 @@ export default async function HomePage() {
   const fullYears = withVolume.filter((t) => t.year <= 2025);
   const last = fullYears[fullYears.length - 1] ?? withVolume[withVolume.length - 1];
   const prev = fullYears[fullYears.length - 2];
-  const yoy =
-    last && prev && prev.median > 0
-      ? ((last.median / prev.median) - 1) * 100
-      : null;
+  const yoy = last && prev ? pctChange(prev.median, last.median) : null;
   const y2020 = withVolume.find((t) => t.year === 2020);
-  const price5y =
-    y2020 && last && y2020.median > 0
-      ? ((last.median / y2020.median) - 1) * 100
-      : null;
-  const vol5y =
-    y2020 && last && y2020.n > 0 ? ((last.n / y2020.n) - 1) * 100 : null;
+  const price5y = pctChange(y2020?.median, last?.median);
+  const vol5y = pctChange(y2020?.n, last?.n);
 
   return (
     <div className="relative">
@@ -70,12 +67,11 @@ export default async function HomePage() {
             Dados abertos · Secretaria da Fazenda de Porto Alegre
           </Badge>
           <h1 className="max-w-2xl text-3xl font-semibold tracking-tight text-balance sm:text-5xl">
-            O preço real de cada apartamento em Porto Alegre.
+            Preço real de apartamentos em Porto Alegre.
           </h1>
           <p className="mt-4 max-w-xl text-base text-muted-foreground sm:text-lg">
-            Transações de venda registradas no ITBI, 2020–2026. Pesquise por
-            endereço, compare com o bairro e acompanhe o mercado com
-            benchmarks por construção e tamanho.
+            Vendas registradas no ITBI de 2020 a 2026. Pesquise um endereço,
+            compare com o bairro e veja o mercado por construção e tamanho.
           </p>
           <div className="mt-8">
             <HomeSearch />
@@ -124,15 +120,16 @@ export default async function HomePage() {
             <CardHeader>
               <CardTitle>Mediana R$/m² por ano</CardTitle>
               <CardDescription>
-                Mediana da cidade vs IPCA (1º ano corrigido)
+                Mix da cidade e IPCA — não é valorização do mesmo estoque
                 {withVolume[withVolume.length - 1]?.year === 2026 ? " · 2026 parcial" : ""}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <TrendChart data={trend} />
               <p className="mt-2 text-[11px] text-muted-foreground">
-                Pontilhado: mediana do primeiro ano da série atualizada pelo
-                IPCA (IBGE / BCB SGS 433). 2026: IPCA até julho.
+                A linha pontilhada é a mediana do primeiro ano da série,
+                atualizada pelo IPCA (IBGE / BCB SGS 433). Em 2026 o IPCA vai
+                até julho.
               </p>
             </CardContent>
           </Card>
@@ -146,6 +143,20 @@ export default async function HomePage() {
             </CardContent>
           </Card>
         </div>
+
+        <Card className="mt-4">
+          <CardHeader>
+            <CardTitle>Valorização por época de construção</CardTitle>
+            <CardDescription>
+              Cinco grupos. Prédio novo é caro, velho é barato — a média da
+              cidade mistura os dois.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <TierTrendChart data={tierTrend} />
+            <TierTrendTable data={tierTrend} />
+          </CardContent>
+        </Card>
       </section>
 
       <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
@@ -155,7 +166,7 @@ export default async function HomePage() {
               Bairros com mais volume
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Mediana R$/m² nos bairros mais transacionados
+              Mediana R$/m² nos bairros com mais vendas
             </p>
           </div>
           <Link
@@ -191,10 +202,7 @@ export default async function HomePage() {
                 </TableHeader>
                 <TableBody>
                   {topBairros.map((b, i) => {
-                    const delta =
-                      b.medianRsm2 > 0
-                        ? ((b.medianRsm2 / overview.medianRsm2) - 1) * 100
-                        : null;
+                    const delta = pctChange(overview.medianRsm2, b.medianRsm2);
                     return (
                       <TableRow key={b.bairroNorm}>
                         <TableCell className="text-muted-foreground">
@@ -245,8 +253,8 @@ export default async function HomePage() {
               Leitura do mercado
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Volume subiu; a mediana da cidade quase não. A polarização está
-              nos bairros.
+              A mediana da cidade sobe quando entra mais lançamento no mix. A
+              diferença também está nos bairros.
             </p>
           </div>
           <Link
@@ -259,49 +267,47 @@ export default async function HomePage() {
         <div className="mt-4 grid gap-4 sm:grid-cols-3">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Cinco anos, pouco preço</CardTitle>
+              <CardTitle className="text-base">O mix puxa a mediana</CardTitle>
             </CardHeader>
             <CardContent className="text-sm text-muted-foreground">
               {price5y !== null && vol5y !== null ? (
                 <>
-                  Mediana {formatPct(price5y)} de 2020 a {last?.year}. Volume{" "}
-                  {formatPct(vol5y)}. O ITBI aqueceu em transações, não no
-                  R$/m² da cidade.
+                  De 2020 a {last?.year} a mediana da cidade subiu {formatPct(price5y)}{" "}
+                  e o volume, {formatPct(vol5y)}. Isso mistura épocas de obra.
                 </>
               ) : (
-                <>Série 2020–2026 de vendas reais de apartamentos.</>
+                <>Série de 2020 a 2026 com vendas reais de apartamentos.</>
               )}
             </CardContent>
           </Card>
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">A mediana mente o bairro</CardTitle>
+              <CardTitle className="text-base">O bairro muda o preço</CardTitle>
             </CardHeader>
             <CardContent className="text-sm text-muted-foreground">
               {high[0] && low[0] ? (
                 <>
-                  {bairroDisplay(high[0].bairro)} medeia {rsm2(high[0].medianRsm2)};{" "}
+                  {bairroDisplay(high[0].bairro)} medeia {rsm2(high[0].medianRsm2)} e{" "}
                   {bairroDisplay(low[0].bairro)}, {rsm2(low[0].medianRsm2)}. Compare
-                  célula a célula, não com a cidade.
+                  pela célula do bairro.
                 </>
               ) : (
-                <>O R$/m² muda mais entre bairros do que a mediana da cidade sugere.</>
+                <>O R$/m² muda mais entre bairros do que a mediana da cidade mostra.</>
               )}
             </CardContent>
           </Card>
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">2024–25 foi desigual</CardTitle>
+              <CardTitle className="text-base">2024 e 2025, bairro a bairro</CardTitle>
             </CardHeader>
             <CardContent className="text-sm text-muted-foreground">
               {hot.length > 0 ? (
                 <>
                   {hot.map((m) => bairroDisplay(m.bairro)).join(", ")} subiram mais
-                  de 25% na mediana. Outros recuaram. O briefing tem a tabela
-                  inteira.
+                  de 25% na mediana e outros recuaram. A tabela está no briefing.
                 </>
               ) : (
-                <>A variação 2024–2025 não foi uniforme entre bairros.</>
+                <>A variação de 2024 a 2025 mudou de bairro para bairro.</>
               )}
             </CardContent>
           </Card>
@@ -316,8 +322,7 @@ export default async function HomePage() {
               <CardTitle className="mt-3">Preço real de venda</CardTitle>
             </CardHeader>
             <CardContent className="text-sm text-muted-foreground">
-              O ITBI registra o que de fato foi vendido, não anúncios. São
-              milhares de transações reais por ano.
+              O ITBI registra vendas concluídas, com milhares de transações por ano.
             </CardContent>
           </Card>
           <Card>
@@ -326,18 +331,18 @@ export default async function HomePage() {
               <CardTitle className="mt-3">Benchmark por bairro</CardTitle>
             </CardHeader>
             <CardContent className="text-sm text-muted-foreground">
-              Compare qualquer unidade contra a mediana do bairro, ajustada
-              por época de construção e tamanho.
+              Compare qualquer unidade com a mediana do bairro, por época de
+              construção e tamanho.
             </CardContent>
           </Card>
           <Card>
             <CardHeader>
               <Landmark className="size-5 text-primary" />
-              <CardTitle className="mt-3">2020–2026</CardTitle>
+              <CardTitle className="mt-3">2020 a 2026</CardTitle>
             </CardHeader>
             <CardContent className="text-sm text-muted-foreground">
-              Sete anos de história, por rua, bairro, construção e área.
-              Fonte: dadosabertos.poa.br.
+              Sete anos por rua, bairro, construção e área. Fonte:
+              dadosabertos.poa.br.
             </CardContent>
           </Card>
         </div>

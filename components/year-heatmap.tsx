@@ -104,8 +104,8 @@ export function YearHeatmap({
         </Table>
       </div>
       <p className="mt-2 text-[11px] text-muted-foreground">
-        *2026 parcial. Célula = mediana R$/m² e volume do ano. Cor relativa ao
-        intervalo da tabela.
+        *2026 parcial. Cada célula mostra a mediana R$/m² e o volume do ano. A
+        cor é relativa ao intervalo da tabela.
       </p>
     </div>
   );

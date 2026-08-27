@@ -6,10 +6,12 @@ import { Badge } from "@/components/ui/badge";
 import { SearchForm } from "@/components/search-form";
 import { CompBadge, TransactionsTable, TxRow } from "@/components/transactions-table";
 import { BenchmarkMatrix } from "@/components/benchmark-matrix";
-import { bairroDisplay } from "@/lib/bairros";
+import { bairroDisplay, resolveBairroNorm } from "@/lib/bairros";
 import { formatNumber, money, rsm2 } from "@/lib/format";
 import { norm, slugify } from "@/lib/data";
+import { vsBenchmark } from "@/lib/market";
 import { searchSchema } from "@/lib/search";
+import { summarizeUnits } from "@/lib/units";
 import {
   getBairros,
   getBenchmarks,
@@ -42,7 +44,7 @@ export default async function BuscaPage({
 
   const allBairros = await getBairros();
   const bairroNorm = parsed.success
-    ? resolveBairro(parsed.data.bairro, allBairros)
+    ? resolveBairroNorm(parsed.data.bairro, allBairros)
     : undefined;
 
   let years: number[] | undefined;
@@ -101,10 +103,7 @@ export default async function BuscaPage({
 
   const txRows: TxRow[] = rows.map((r) => {
     const cell = cellLookup.get(`${r.bairroNorm}|${r.tier}|${r.band}`);
-    const comp =
-      cell && cell.p50 > 0
-        ? { pct: (r.rsm2 / cell.p50 - 1) * 100, p50: cell.p50 }
-        : null;
+    const comp = vsBenchmark(r.rsm2, cell?.p50);
     return {
       id: r.id,
       year: r.year,
@@ -134,7 +133,7 @@ export default async function BuscaPage({
           Busca por endereço
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Encontre vendas reais do ITBI por rua, número e bairro.
+          Encontre vendas do ITBI por rua, número e bairro.
         </p>
       </div>
 
@@ -145,7 +144,7 @@ export default async function BuscaPage({
           <CardContent className="flex flex-col items-center gap-3 py-16 text-center">
             <SearchX className="size-10 text-muted-foreground" />
             <p className="text-sm text-muted-foreground">
-              Digite uma rua (aceita erro de digitação) ou selecione um bairro.
+              Digite uma rua, mesmo com erro de digitação, ou selecione um bairro.
             </p>
           </CardContent>
         </Card>
@@ -158,7 +157,7 @@ export default async function BuscaPage({
             <div>
               <p className="font-medium">Nenhuma transação encontrada</p>
               <p className="mt-1 text-sm text-muted-foreground">
-                Tente um trecho de rua menor, remova o número ou amplie os
+                Tente um trecho menor de rua, tire o número ou amplie os
                 filtros.
               </p>
             </div>
@@ -170,7 +169,8 @@ export default async function BuscaPage({
         <div className="mt-8 space-y-6">
           {fuzzyOnly && (
             <p className="text-sm text-muted-foreground">
-              Nenhuma rua exata. Ruas próximas (Levenshtein, sem maiúsculas/acentos):{" "}
+              Nenhuma rua bateu no nome. Ruas próximas, por Levenshtein e sem
+              maiúsculas nem acentos:{" "}
               {streetHits.map((h) => h.logradouro).join(" · ")}
             </p>
           )}
@@ -221,7 +221,7 @@ export default async function BuscaPage({
                   <CardDescription>
                     {porUnidade
                       ? "Média de preço por apartamento"
-                      : "Cada linha compara o R$/m² com a mediana do bairro (p50, construção × tamanho)"}
+                      : "Cada linha compara o R$/m² com a mediana do bairro, por construção e tamanho (p50)"}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -285,28 +285,8 @@ export default async function BuscaPage({
   );
 }
 
-function resolveBairro(
-  input: string | undefined,
-  bairros: { bairroNorm: string; bairro: string }[],
-): string | undefined {
-  if (!input) return undefined;
-  const n = norm(input).toLowerCase();
-  const exact = bairros.find((b) => b.bairroNorm === n);
-  if (exact) return exact.bairroNorm;
-  const display = bairros.find((b) => norm(bairroDisplay(b.bairro)) === n);
-  return display?.bairroNorm;
-}
-
 function UnitTable({ rows }: { rows: TxRow[] }) {
-  const byUnit = new Map<string, TxRow[]>();
-  for (const r of rows) {
-    const key = r.nUnidade ?? "—";
-    const arr = byUnit.get(key);
-    if (arr) arr.push(r);
-    else byUnit.set(key, [r]);
-  }
-
-  const units = [...byUnit.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+  const units = summarizeUnits(rows);
 
   return (
     <div className="overflow-x-auto">
@@ -322,39 +302,31 @@ function UnitTable({ rows }: { rows: TxRow[] }) {
           </tr>
         </thead>
         <tbody>
-          {units.map(([unit, sales]) => {
-            const areas = new Set(sales.map((s) => s.area));
-            const area = areas.size === 1 ? [...areas][0] : null;
-            const avgBase = sales.reduce((s, x) => s + x.fullBase, 0) / sales.length;
-            const avgRsm2 = area ? avgBase / area : null;
-            const comp = sales[0]?.comp;
-            const dates = [...new Set(sales.map((s) => s.dataEstimativa.slice(0, 4)))];
-            return (
-              <tr key={unit} className="border-b last:border-0">
-                <td className="py-2 pr-4 font-mono">{unit}</td>
+          {units.map((u) => (
+              <tr key={u.unit} className="border-b last:border-0">
+                <td className="py-2 pr-4 font-mono">{u.unit}</td>
                 <td className="py-2 pr-4 text-right font-mono tabular-nums">
-                  {area ? area.toLocaleString("pt-BR", { maximumFractionDigits: 1 }) : "—"}
+                  {u.area ? u.area.toLocaleString("pt-BR", { maximumFractionDigits: 1 }) : "—"}
                 </td>
                 <td className="py-2 pr-4 text-right font-mono tabular-nums">
-                  {money(avgBase)}
+                  {money(u.avgBase)}
                 </td>
                 <td className="py-2 pr-4 text-right font-mono tabular-nums">
-                  {avgRsm2 ? rsm2(avgRsm2) : "—"}
+                  {u.avgRsm2 ? rsm2(u.avgRsm2) : "—"}
                 </td>
                 <td className="py-2 pr-4 text-right">
-                  {comp ? (
-                    <CompBadge pct={comp.pct} />
+                  {u.comp ? (
+                    <CompBadge pct={u.comp.pct} />
                   ) : (
                     <span className="text-muted-foreground">—</span>
                   )}
                 </td>
                 <td className="py-2 text-right font-mono tabular-nums text-muted-foreground">
-                  {sales.length}x
-                  <span className="ml-1 text-xs">{dates.join(", ")}</span>
+                  {u.sales}x
+                  <span className="ml-1 text-xs">{u.years.join(", ")}</span>
                 </td>
               </tr>
-            );
-          })}
+            ))}
         </tbody>
       </table>
     </div>

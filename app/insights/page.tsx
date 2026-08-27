@@ -8,12 +8,14 @@ import { StatCard } from "@/components/stat-card";
 import { TrendChart } from "@/components/trend-chart";
 import { VolumeChart } from "@/components/volume-chart";
 import { GroupBarChart } from "@/components/group-bar-chart";
+import { TierTrendChart, TierTrendTable } from "@/components/tier-trend-chart";
 import { MoversTable } from "@/components/movers-table";
 import { YearHeatmap, type HeatRow } from "@/components/year-heatmap";
 import { bairroDisplay } from "@/lib/bairros";
-import { bandLabel, slugify, tierLabel } from "@/lib/data";
+import { bandLabel, slugify, TIERS, tierLabel } from "@/lib/data";
 import { compact, formatNumber, formatPct, rsm2 } from "@/lib/format";
-import { ipcaFactor, ipcaPct, ipcaRebased, ipcaYear } from "@/lib/ipca";
+import { ipcaPct, ipcaRebased, ipcaYear } from "@/lib/ipca";
+import { pctChange, sharePct, spreadRatio } from "@/lib/market";
 import {
   getBairroMovers,
   getBairroYearMatrix,
@@ -21,6 +23,7 @@ import {
   getGroupStats,
   getOverview,
   getPercentiles,
+  getTierTrend,
   getTopBairros,
   getTrend,
 } from "@/db/queries";
@@ -28,7 +31,7 @@ import {
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Intel de mercado" };
 
-const TIER_ORDER = ["pre-1950", "A", "B", "C", "D", "?"];
+const TIER_ORDER = [...TIERS, "?"];
 const BAND_ORDER = ["S", "M", "L", "XL"];
 
 export default async function InsightsPage() {
@@ -43,6 +46,7 @@ export default async function InsightsPage() {
     low,
     matrix,
     topVolume,
+    tierTrend,
   ] = await Promise.all([
     getOverview(),
     getTrend({}),
@@ -54,52 +58,41 @@ export default async function InsightsPage() {
     getBairrosByMedian("asc", 8, 80),
     getBairroYearMatrix(10, 40),
     getTopBairros(10),
+    getTierTrend(),
   ]);
 
   const y2020 = trend.find((t) => t.year === 2020);
   const y2024 = trend.find((t) => t.year === 2024);
   const y2025 = trend.find((t) => t.year === 2025);
-  const price5y =
-    y2020 && y2025 && y2020.median > 0
-      ? ((y2025.median / y2020.median) - 1) * 100
-      : null;
+  const price5y = pctChange(y2020?.median, y2025?.median);
   const ipca5y = ipcaPct(2020, 2025);
-  const ipca5yFactor = ipcaFactor(2020, 2025);
-  const vsIpca5y =
-    y2020 && y2025 && ipca5yFactor && y2020.median > 0
-      ? (y2025.median / (y2020.median * ipca5yFactor) - 1) * 100
-      : null;
-  const vol5y =
-    y2020 && y2025 && y2020.n > 0 ? ((y2025.n / y2020.n) - 1) * 100 : null;
-  const cityYoy =
-    y2024 && y2025 && y2024.median > 0
-      ? ((y2025.median / y2024.median) - 1) * 100
-      : null;
+  const vol5y = pctChange(y2020?.n, y2025?.n);
+  const cityYoy = pctChange(y2024?.median, y2025?.median);
 
   const gainers = movers.filter((m) => m.yoy > 0).slice(0, 8);
   const fallers = [...movers].filter((m) => m.yoy < 0).sort((a, b) => a.yoy - b.yoy).slice(0, 8);
   const topGainer = gainers[0];
   const topFaller = fallers[0];
 
-  const tierD = byTier.find((t) => t.key === "D");
+  const tierE = byTier.find((t) => t.key === "E");
   const tierA = byTier.find((t) => t.key === "A");
-  const newPremium =
-    tierD && tierA && tierA.medianRsm2 > 0
-      ? ((tierD.medianRsm2 / tierA.medianRsm2) - 1) * 100
-      : null;
+  const newPremium = pctChange(tierA?.medianRsm2, tierE?.medianRsm2);
   const unknownN = byTier.find((t) => t.key === "?")?.n ?? 0;
+
+  const at = (year: number, t: string) =>
+    tierTrend.find((r) => r.year === year && r.tier === t);
+  const oldDelta = pctChange(at(2020, "B")?.median, at(2025, "B")?.median);
+  const midDelta = pctChange(at(2020, "D")?.median, at(2025, "D")?.median);
+  const n2025 = tierTrend.filter((r) => r.year === 2025).reduce((s, r) => s + r.n, 0);
+  const eShare1 = sharePct(at(2025, "E")?.n ?? 0, n2025);
 
   const bandXl = byBand.find((b) => b.key === "XL");
   const bandM = byBand.find((b) => b.key === "M");
-  const xlPremium =
-    bandXl && bandM && bandM.medianRsm2 > 0
-      ? ((bandXl.medianRsm2 / bandM.medianRsm2) - 1) * 100
-      : null;
+  const xlPremium = pctChange(bandM?.medianRsm2, bandXl?.medianRsm2);
 
   const top10n = topVolume.reduce((s, b) => s + b.n, 0);
-  const top10share = overview.total > 0 ? (top10n / overview.total) * 100 : 0;
-  const spread =
-    percentiles.p10 > 0 ? percentiles.p90 / percentiles.p10 : null;
+  const top10share = sharePct(top10n, overview.total);
+  const spread = spreadRatio(percentiles.p10, percentiles.p90);
 
   const years = [...new Set(matrix.map((c) => c.year))].sort((a, b) => a - b);
   const byBairro = new Map<string, HeatRow>();
@@ -137,14 +130,14 @@ export default async function InsightsPage() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
       <Badge variant="outline">Briefing · Porto Alegre</Badge>
-      <h1 className="mt-3 max-w-3xl text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
-        O mercado de apartamentos, em uma página.
-      </h1>
-      <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-        Leitura executiva do ITBI {overview.yearMin}–{overview.yearMax}:{" "}
-        {formatNumber(overview.total)} vendas reais. Medianas, não médias —
-        as médias mentem com outliers de milhões por m².
-      </p>
+          <h1 className="mt-3 max-w-3xl text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
+            O mercado de apartamentos em Porto Alegre.
+          </h1>
+          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+            ITBI de {overview.yearMin} a {overview.yearMax}, com{" "}
+            {formatNumber(overview.total)} vendas. Usamos medianas porque
+            outliers de milhões por m² distorcem a média.
+          </p>
 
       <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
@@ -162,27 +155,27 @@ export default async function InsightsPage() {
           value={formatNumber(y2025?.n ?? 0)}
           hint={vol5y !== null ? `${formatPct(vol5y)} vs 2020` : undefined}
         />
-        <StatCard
-          label="Prêmio 2010+"
-          value={newPremium !== null ? formatPct(newPremium) : "—"}
-          hint="vs apartamentos 1950–69"
-        />
+          <StatCard
+            label="Prêmio 2020+"
+            value={newPremium !== null ? formatPct(newPremium) : "—"}
+            hint="vs apartamentos até 1969"
+          />
       </div>
 
       <section className="mt-10">
         <h2 className="text-lg font-semibold tracking-tight">Leituras</h2>
         <ol className="mt-4 grid gap-4 lg:grid-cols-2">
-          <Takeaway n={1} title="A cidade aqueceu em volume, não em preço.">
-            De 2020 a 2025 a mediana subiu {price5y !== null ? formatPct(price5y) : "—"}.
-            O IPCA no mesmo intervalo, {ipca5y !== null ? formatPct(ipca5y) : "—"}.
-            {vsIpca5y !== null && (
-              <> O m² da cidade ficou {formatPct(vsIpca5y)} em termos reais.</>
-            )}{" "}
-            Volume, {vol5y !== null ? formatPct(vol5y) : "—"}. Mais transações,
-            preço que não acompanhou a inflação.
+          <Takeaway n={1} title="A mediana da cidade mistura estoque velho e lançamento.">
+            De 2020 a 2025 a mediana da cidade subiu {price5y !== null ? formatPct(price5y) : "—"}.
+            O estoque 1970–89 variou {oldDelta !== null ? formatPct(oldDelta) : "—"} e o
+            2010–19, {midDelta !== null ? formatPct(midDelta) : "—"}. Lançamentos 2020+
+            foram de {formatNumber(at(2020, "E")?.n ?? 0)} para{" "}
+            {formatNumber(at(2025, "E")?.n ?? 0)} vendas ({formatPct(eShare1).replace("+", "")}{" "}
+            do volume em 2025) — é isso que puxa a média, não a valorização do
+            mesmo prédio. O IPCA no período foi {ipca5y !== null ? formatPct(ipca5y) : "—"}.
           </Takeaway>
-          <Takeaway n={2} title="A mediana esconde a polarização.">
-            Em 2025 a cidade inteira variou {cityYoy !== null ? formatPct(cityYoy) : "—"}.
+          <Takeaway n={2} title="Cada bairro andou de um jeito.">
+            Em 2025 a cidade variou {cityYoy !== null ? formatPct(cityYoy) : "—"}.
             {topGainer && (
               <>
                 {" "}
@@ -191,45 +184,68 @@ export default async function InsightsPage() {
             )}
             {topFaller && (
               <>
-                ; {bairroDisplay(topFaller.bairro)} recuou {formatPct(topFaller.yoy)}
+                {" "}
+                e {bairroDisplay(topFaller.bairro)} recuou {formatPct(topFaller.yoy)}
               </>
             )}
-            . O mercado não é um, são vários.
+            .
           </Takeaway>
-          <Takeaway n={3} title="Geografia vale mais que o anúncio.">
+          <Takeaway n={3} title="O preço muda mais entre bairros.">
             {high[0] && low[0] && (
               <>
-                {bairroDisplay(high[0].bairro)} medeia {rsm2(high[0].medianRsm2)};{" "}
+                {bairroDisplay(high[0].bairro)} medeia {rsm2(high[0].medianRsm2)} e{" "}
                 {bairroDisplay(low[0].bairro)}, {rsm2(low[0].medianRsm2)}. O
                 percentil 90 ({rsm2(percentiles.p90)}) é {spread ? `${spread.toFixed(1).replace(".", ",")}×` : "várias vezes"} o
                 percentil 10 ({rsm2(percentiles.p10)}).
               </>
             )}
           </Takeaway>
-          <Takeaway n={4} title="Novo constrói prêmio. Grande também — na cidade.">
-            Estoque 2010+ vale {newPremium !== null ? formatPct(newPremium) : "—"} a
-            mais por m² que 1950–69. Unidades ≥ 150 m² saem{" "}
-            {xlPremium !== null ? formatPct(xlPremium) : "—"} acima da faixa 50–89 m²
-            — o XL está nos bairros caros, não o contrário. Por isso o
-            benchmark é célula (bairro × construção × tamanho), não a mediana
-            da cidade.
+          <Takeaway n={4} title="Imóvel novo e unidade grande saem mais caros por m².">
+            Lançamentos 2020+ valem {newPremium !== null ? formatPct(newPremium) : "—"} a
+            mais por m² que prédios até 1969, e unidades de 150 m² ou mais saem{" "}
+            {xlPremium !== null ? formatPct(xlPremium) : "—"} acima da faixa 50–89 m²,
+            porque o XL está nos bairros caros. Por isso o benchmark usa célula
+            de bairro, construção e tamanho.
           </Takeaway>
         </ol>
+      </section>
+
+      <section className="mt-10">
+        <h2 className="text-lg font-semibold tracking-tight">
+          Valorização por época de construção
+        </h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Mesma pergunta — o m² subiu? — dentro de cada grupo. Células com
+          menos de 30 vendas ficam em branco.
+        </p>
+        <Card className="mt-4">
+          <CardHeader>
+            <CardTitle>Mediana R$/m² por ano de obra</CardTitle>
+            <CardDescription>
+              Cinco grupos disjuntos. A linha da cidade some o mix; esta não.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <TierTrendChart data={tierTrend} />
+            <TierTrendTable data={tierTrend} />
+          </CardContent>
+        </Card>
       </section>
 
       <section className="mt-10 grid gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle>Mediana R$/m² por ano</CardTitle>
-            <CardDescription>
-              Cidade vs IPCA · 2026 parcial · p50, não média
-            </CardDescription>
+              <CardDescription>
+                Cidade e IPCA, com 2026 parcial — mix de todas as épocas
+              </CardDescription>
           </CardHeader>
           <CardContent>
             <TrendChart data={trend} />
             <YearStrip trend={trend} />
             <p className="mt-2 text-[11px] text-muted-foreground">
-              Pontilhado: mediana de 2020 × IPCA (IBGE / BCB SGS 433). 2026 até julho.
+              A linha pontilhada é a mediana de 2020 atualizada pelo IPCA
+              (IBGE / BCB SGS 433). Em 2026 o índice vai até julho.
             </p>
           </CardContent>
         </Card>
@@ -246,7 +262,7 @@ export default async function InsightsPage() {
             <VolumeChart data={trend} />
             <p className="mt-3 text-xs text-muted-foreground">
               Os 10 bairros com mais vendas concentram {formatPct(top10share).replace("+", "")} do
-              volume. Centro Histórico lidera quantidade, não preço.
+              volume. O Centro Histórico lidera em quantidade.
             </p>
           </CardContent>
         </Card>
@@ -257,7 +273,7 @@ export default async function InsightsPage() {
           2024 → 2025, bairro a bairro
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Variação da mediana R$/m². Só bairros com ≥ 30 vendas em cada ano.
+          Variação da mediana R$/m², em bairros com 30 ou mais vendas em cada ano.
         </p>
         <div className="mt-4 grid gap-4 lg:grid-cols-2">
           <Card>
@@ -286,7 +302,7 @@ export default async function InsightsPage() {
           Mediana por bairro × ano
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          A série completa. Filtre pelo nome; clique para abrir o bairro.
+          A série completa. Filtre pelo nome e clique para abrir o bairro.
         </p>
         <Card className="mt-4">
           <CardContent className="pt-4">
@@ -312,7 +328,7 @@ export default async function InsightsPage() {
           <CardHeader>
             <CardTitle>Faixa de tamanho</CardTitle>
             <CardDescription>
-              Na cidade o m² do XL custa mais — mix de bairro, não lei física
+              Na cidade o m² do XL custa mais, porque o estoque grande está nos bairros caros.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -360,12 +376,12 @@ export default async function InsightsPage() {
             <CardTitle className="text-base">Concentração</CardTitle>
           </CardHeader>
           <CardContent className="text-sm leading-relaxed text-muted-foreground">
-            Dez bairros = {formatNumber(top10n)} vendas ({formatPct(top10share).replace("+", "")}).
+            Dez bairros somam {formatNumber(top10n)} vendas ({formatPct(top10share).replace("+", "")}).
             {topVolume[0] && (
               <>
                 {" "}
                 {bairroDisplay(topVolume[0].bairro)} sozinho responde por{" "}
-                {formatPct((topVolume[0].n / overview.total) * 100).replace("+", "")} do
+                {formatPct(sharePct(topVolume[0].n, overview.total)).replace("+", "")} do
                 cadastro.
               </>
             )}
@@ -376,9 +392,9 @@ export default async function InsightsPage() {
             <CardTitle className="text-base">Como ler</CardTitle>
           </CardHeader>
           <CardContent className="text-sm leading-relaxed text-muted-foreground">
-            ITBI é preço declarado para o fisco, com piso. 2026 está incompleto.
-            Médias de área e R$/m² explodem com outliers — daí a mediana.
-            Detalhe em{" "}
+            O ITBI é o preço declarado ao fisco, com piso, e 2026 está
+            incompleto. Usamos mediana porque outliers distorcem a média de
+            área e de R$/m². Detalhe em{" "}
             <Link href="/sobre" className="underline underline-offset-2 hover:text-foreground">
               metodologia
             </Link>
@@ -442,10 +458,7 @@ function YearStrip({
             <td className="px-1 text-muted-foreground">Mediana</td>
             {trend.map((t, i) => {
               const prev = trend[i - 1];
-              const d =
-                prev && prev.median > 0
-                  ? ((t.median / prev.median) - 1) * 100
-                  : null;
+              const d = prev ? pctChange(prev.median, t.median) : null;
               return (
                 <td key={t.year} className="px-1">
                   <div>{rsm2(t.median)}</div>
@@ -460,8 +473,7 @@ function YearStrip({
             <td className="px-1 pt-2 text-muted-foreground">vs IPCA</td>
             {trend.map((t) => {
               const indexed = ipcaByYear.get(t.year);
-              const vs =
-                indexed && indexed > 0 ? (t.median / indexed - 1) * 100 : null;
+              const vs = indexed ? pctChange(indexed, t.median) : null;
               return (
                 <td key={t.year} className="px-1 pt-2">
                   {vs === null ? "—" : formatPct(vs)}
@@ -485,7 +497,7 @@ function ExtremeList({
   return (
     <ul className="space-y-2">
       {rows.map((r) => {
-        const delta = city > 0 ? ((r.medianRsm2 / city) - 1) * 100 : null;
+        const delta = pctChange(city, r.medianRsm2);
         return (
           <li key={r.bairroNorm} className="flex items-baseline justify-between gap-3 text-sm">
             <Link

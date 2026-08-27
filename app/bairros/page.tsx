@@ -15,6 +15,7 @@ import { bairroDisplay } from "@/lib/bairros";
 import { Badge } from "@/components/ui/badge";
 import { formatNumber, formatPct, rsm2 } from "@/lib/format";
 import { slugify } from "@/lib/data";
+import { pctChange } from "@/lib/market";
 import { getBairros, getOverview } from "@/db/queries";
 
 export const dynamic = "force-dynamic";
@@ -28,7 +29,7 @@ export default async function BairrosPage() {
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
       <h1 className="text-2xl font-semibold tracking-tight">Bairros</h1>
       <p className="mt-1 text-sm text-muted-foreground">
-        Volume e mediana R$/m² por bairro, 2020–2026. Mediana real, não média.
+        Volume e mediana R$/m² por bairro, de 2020 a 2026.
       </p>
 
       <div className="mt-6">
@@ -83,7 +84,7 @@ export default async function BairrosPage() {
                             : "font-mono"
                         }
                       >
-                        {formatPct((b.medianRsm2 / overview.medianRsm2 - 1) * 100)}
+                        {formatPct(pctChange(overview.medianRsm2, b.medianRsm2) ?? 0)}
                       </Badge>
                     )}
                   </TableCell>

@@ -1,5 +1,4 @@
-// Display-name map for the bairros as they appear in the source CSV
-// (uppercase, truncated to 15 chars). Key = raw value, value = proper name.
+import { norm } from "./data";
 
 export const BAIRRO_DISPLAY: Record<string, string> = {
   "": "Não informado",
@@ -105,4 +104,16 @@ export const BAIRRO_DISPLAY: Record<string, string> = {
 
 export function bairroDisplay(raw: string): string {
   return BAIRRO_DISPLAY[raw] ?? raw;
+}
+
+export function resolveBairroNorm(
+  input: string | undefined,
+  bairros: { bairroNorm: string; bairro: string }[],
+): string | undefined {
+  if (!input) return undefined;
+  const n = norm(input).toLowerCase();
+  const exact = bairros.find((b) => b.bairroNorm === n);
+  if (exact) return exact.bairroNorm;
+  const display = bairros.find((b) => norm(bairroDisplay(b.bairro)) === n);
+  return display?.bairroNorm;
 }
