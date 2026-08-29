@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Apartamentos em Porto Alegre — ITBI 2020–2026</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,650;9..144,800&family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --paper: #f2eadb;
+      --paper-2: #e8dcc8;
+      --ink: #1b1610;
+      --ink-soft: #4a4036;
+      --brick: #c24a16;
+      --moss: #2f4a3e;
+      --rule: rgba(27, 22, 16, 0.18);
+      --white: #faf6ee;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; background: var(--paper); color: var(--ink); }
+    body {
+      font-family: "Source Serif 4", Georgia, serif;
+      font-optical-sizing: auto;
+      line-height: 1.45;
+      background-image:
+        radial-gradient(rgba(27,22,16,0.035) 0.6px, transparent 0.6px);
+      background-size: 3px 3px;
+    }
+    .wrap { max-width: 1120px; margin: 0 auto; padding: 40px 28px 80px; }
+    .mast {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 16px;
+      align-items: end;
+      border-bottom: 3px solid var(--ink);
+      padding-bottom: 14px;
+    }
+    .kicker {
+      font-family: "IBM Plex Mono", ui-monospace, monospace;
+      font-size: 11px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--brick);
+    }
+    h1 {
+      font-family: Fraunces, serif;
+      font-weight: 800;
+      font-size: clamp(2.2rem, 6vw, 4.4rem);
+      line-height: 0.92;
+      letter-spacing: -0.03em;
+      margin: 8px 0 0;
+    }
+    .deck {
+      max-width: 62ch;
+      font-size: 1.15rem;
+      color: var(--ink-soft);
+      margin: 18px 0 0;
+    }
+    .stamp {
+      border: 2px solid var(--brick);
+      color: var(--brick);
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 10px 12px;
+      transform: rotate(-6deg);
+      text-align: center;
+      align-self: start;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+      margin: 36px 0 48px;
+      border-top: 1px solid var(--ink);
+      border-bottom: 1px solid var(--ink);
+    }
+    .stat { padding: 18px 16px 16px 0; border-right: 1px solid var(--rule); }
+    .stat:last-child { border-right: 0; padding-right: 0; }
+    .stat b {
+      display: block;
+      font-family: Fraunces, serif;
+      font-size: clamp(1.4rem, 3vw, 2.1rem);
+      font-weight: 650;
+      letter-spacing: -0.03em;
+      line-height: 1;
+    }
+    .stat span {
+      display: block;
+      margin-top: 8px;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 11px;
+      letter-spacing: 0.04em;
+      color: var(--ink-soft);
+    }
+    h2 {
+      font-family: Fraunces, serif;
+      font-weight: 650;
+      font-size: 1.85rem;
+      letter-spacing: -0.02em;
+      margin: 56px 0 8px;
+    }
+    h2 .n {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.14em;
+      color: var(--brick);
+      display: block;
+      margin-bottom: 6px;
+    }
+    p.lead { max-width: 68ch; color: var(--ink-soft); margin: 0 0 22px; }
+    .bars { display: grid; gap: 9px; }
+    .row {
+      display: grid;
+      grid-template-columns: 92px 1fr 88px 72px;
+      gap: 12px;
+      align-items: center;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 12px;
+    }
+    .track { height: 18px; background: var(--paper-2); }
+    .fill { height: 100%; background: var(--ink); }
+    .fill.brick { background: var(--brick); }
+    .fill.moss { background: var(--moss); }
+    .muted { color: var(--ink-soft); }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 12px;
+    }
+    th, td { text-align: right; padding: 8px 8px; border-bottom: 1px solid var(--rule); }
+    th:first-child, td:first-child { text-align: left; padding-left: 0; }
+    th { font-weight: 500; color: var(--ink-soft); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; }
+    .heat {
+      display: grid;
+      grid-template-columns: 56px repeat(8, 1fr);
+      gap: 3px;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 11px;
+    }
+    .heat b { font-weight: 500; color: var(--ink-soft); padding: 8px 4px 8px 0; }
+    .cell {
+      padding: 10px 4px;
+      text-align: center;
+      background: var(--paper-2);
+    }
+    .note {
+      margin-top: 40px;
+      padding-top: 16px;
+      border-top: 3px solid var(--ink);
+      font-size: 0.92rem;
+      color: var(--ink-soft);
+      max-width: 78ch;
+    }
+    .sizes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .card {
+      background: var(--white);
+      padding: 22px 20px 18px;
+      border-top: 6px solid var(--ink);
+    }
+    .card.s { border-top-color: var(--moss); }
+    .card.m { border-top-color: var(--ink); }
+    .card.l { border-top-color: var(--brick); }
+    .card h3 { margin: 0; font-family: Fraunces, serif; font-size: 1.4rem; }
+    .card .big { font-family: Fraunces, serif; font-size: 2.2rem; font-weight: 650; letter-spacing: -0.03em; margin: 10px 0 4px; }
+    .card p { margin: 0; font-family: "IBM Plex Mono", monospace; font-size: 11px; color: var(--ink-soft); }
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px 22px;
+      margin: 0 0 18px;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 11px;
+      color: var(--ink-soft);
+    }
+    .legend i {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      margin-right: 6px;
+      vertical-align: -1px;
+    }
+    .legend .moss { background: var(--moss); }
+    .legend .ink { background: var(--ink); }
+    .legend .brick { background: var(--brick); }
+    .cluster {
+      display: grid;
+      grid-template-columns: 88px 1fr;
+      gap: 6px 14px;
+      align-items: start;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--rule);
+    }
+    .cluster .decade {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 12px;
+      padding-top: 2px;
+    }
+    .mini-row {
+      display: grid;
+      grid-template-columns: 1fr 72px;
+      gap: 10px;
+      align-items: center;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 11px;
+      margin-bottom: 3px;
+    }
+    .mini-track { height: 10px; background: var(--paper-2); }
+    .mini-track .fill { height: 100%; }
+    @media (max-width: 860px) {
+      .stats, .grid-2, .sizes { grid-template-columns: 1fr; }
+      .mast { grid-template-columns: 1fr; }
+      .stamp { justify-self: start; transform: none; }
+      .row { grid-template-columns: 72px 1fr 72px; }
+      .row span:last-child { display: none; }
+      .heat { font-size: 10px; grid-template-columns: 48px repeat(8, 1fr); }
+      .cluster { grid-template-columns: 72px 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="mast">
+      <div>
+        <div class="kicker">ITBI · Porto Alegre · só apartamento residencial</div>
+        <h1>O apto usado não subiu. O novo, sim.</h1>
+      </div>
+      <div class="stamp">dados abertos<br />prefeitura poa</div>
+    </header>
+    <p class="deck">
+      97.987 vendas de apartamento (20–250&nbsp;m², 100% do imóvel, com ano de construção) entre 2020 e 2026.
+      Mediana da cidade: <strong>R$&nbsp;4.599/m²</strong>. Sem sala comercial, sem cobertura, sem terreno.
+    </p>
+
+    <section class="stats">
+      <div class="stat"><b>97.987</b><span>transações de apartamento</span></div>
+      <div class="stat"><b>R$ 4.599</b><span>mediana por metro quadrado</span></div>
+      <div class="stat"><b>R$ 270 mil</b><span>preço mediano</span></div>
+      <div class="stat"><b>67 m²</b><span>área média</span></div>
+    </section>
+
+    <h2><span class="n">01 — volume</span>Quem vende, por década de construção</h2>
+    <p class="lead">Década = ano de construção do prédio, não o ano da venda. Quase um em quatro negócios é um apartamento dos anos 2010. Os anos 1980 ainda são o estoque usado mais líquido.</p>
+    <div class="bars">
+      <div class="row"><span>até 1949</span><div class="track"><div class="fill" style="width:1.7%"></div></div><span>407</span><span class="muted">0,4%</span></div>
+      <div class="row"><span>1950–59</span><div class="track"><div class="fill" style="width:20.3%"></div></div><span>4.877</span><span class="muted">5,0%</span></div>
+      <div class="row"><span>1960–69</span><div class="track"><div class="fill" style="width:35.6%"></div></div><span>8.547</span><span class="muted">8,7%</span></div>
+      <div class="row"><span>1970–79</span><div class="track"><div class="fill" style="width:57.2%"></div></div><span>13.740</span><span class="muted">14,0%</span></div>
+      <div class="row"><span>1980–89</span><div class="track"><div class="fill" style="width:80.5%"></div></div><span>19.339</span><span class="muted">19,7%</span></div>
+      <div class="row"><span>1990–99</span><div class="track"><div class="fill" style="width:25.7%"></div></div><span>6.182</span><span class="muted">6,3%</span></div>
+      <div class="row"><span>2000–09</span><div class="track"><div class="fill" style="width:37.9%"></div></div><span>9.117</span><span class="muted">9,3%</span></div>
+      <div class="row"><span>2010–19</span><div class="track"><div class="fill brick" style="width:100%"></div></div><span>24.022</span><span class="muted">24,5%</span></div>
+      <div class="row"><span>2020–26</span><div class="track"><div class="fill moss" style="width:48.9%"></div></div><span>11.756</span><span class="muted">12,0%</span></div>
+    </div>
+
+    <h2><span class="n">02 — preço</span>R$/m² por década de construção</h2>
+    <p class="lead">Mediana de todas as vendas 2020–2026. Prédio novo custa o dobro do estoque 70/80. Anos 80 são o chão do mercado usado — muita kitnet, área média 55&nbsp;m².</p>
+    <div class="bars">
+      <div class="row"><span>até 1949</span><div class="track"><div class="fill" style="width:36.8%"></div></div><span>3.485</span><span class="muted">R$ 262 mil</span></div>
+      <div class="row"><span>1950–59</span><div class="track"><div class="fill" style="width:38.9%"></div></div><span>3.677</span><span class="muted">R$ 250 mil</span></div>
+      <div class="row"><span>1960–69</span><div class="track"><div class="fill" style="width:41.8%"></div></div><span>3.953</span><span class="muted">R$ 227 mil</span></div>
+      <div class="row"><span>1970–79</span><div class="track"><div class="fill" style="width:43.8%"></div></div><span>4.147</span><span class="muted">R$ 230 mil</span></div>
+      <div class="row"><span>1980–89</span><div class="track"><div class="fill" style="width:39.6%"></div></div><span>3.742</span><span class="muted">R$ 190 mil</span></div>
+      <div class="row"><span>1990–99</span><div class="track"><div class="fill" style="width:51.6%"></div></div><span>4.883</span><span class="muted">R$ 320 mil</span></div>
+      <div class="row"><span>2000–09</span><div class="track"><div class="fill" style="width:62.6%"></div></div><span>5.919</span><span class="muted">R$ 440 mil</span></div>
+      <div class="row"><span>2010–19</span><div class="track"><div class="fill" style="width:57.2%"></div></div><span>5.412</span><span class="muted">R$ 340 mil</span></div>
+      <div class="row"><span>2020–26</span><div class="track"><div class="fill brick" style="width:100%"></div></div><span>9.458</span><span class="muted">R$ 440 mil</span></div>
+    </div>
+
+    <div class="grid-2">
+      <div>
+        <h2><span class="n">03 — no tempo</span>Vendas, ano a ano</h2>
+        <p class="lead">Volume subiu 87% de 2020 a 2025. 2026 ainda está incompleto.</p>
+        <div class="bars">
+          <div class="row"><span>2020</span><div class="track"><div class="fill" style="width:53.4%"></div></div><span>10.089</span><span></span></div>
+          <div class="row"><span>2021</span><div class="track"><div class="fill" style="width:70.8%"></div></div><span>13.369</span><span></span></div>
+          <div class="row"><span>2022</span><div class="track"><div class="fill" style="width:78.1%"></div></div><span>14.748</span><span></span></div>
+          <div class="row"><span>2023</span><div class="track"><div class="fill" style="width:84.6%"></div></div><span>15.976</span><span></span></div>
+          <div class="row"><span>2024</span><div class="track"><div class="fill" style="width:85.2%"></div></div><span>16.083</span><span></span></div>
+          <div class="row"><span>2025</span><div class="track"><div class="fill brick" style="width:100%"></div></div><span>18.881</span><span></span></div>
+          <div class="row"><span>2026*</span><div class="track"><div class="fill" style="width:46.8%;opacity:.45"></div></div><span>8.841</span><span></span></div>
+        </div>
+      </div>
+      <div>
+        <h2><span class="n">04 — no tempo</span>Reais por metro quadrado, ano a ano</h2>
+        <p class="lead">Nominal +2% (4.483 → 4.574). IPCA no período cerca de 33%. Em reais de 2020, o metro quadrado caiu.</p>
+        <div class="bars">
+          <div class="row"><span>2020</span><div class="track"><div class="fill moss" style="width:95.0%"></div></div><span>4.483</span><span></span></div>
+          <div class="row"><span>2021</span><div class="track"><div class="fill moss" style="width:97.6%"></div></div><span>4.609</span><span></span></div>
+          <div class="row"><span>2022</span><div class="track"><div class="fill moss" style="width:98.6%"></div></div><span>4.656</span><span></span></div>
+          <div class="row"><span>2023</span><div class="track"><div class="fill moss" style="width:97.0%"></div></div><span>4.578</span><span></span></div>
+          <div class="row"><span>2024</span><div class="track"><div class="fill moss" style="width:98.0%"></div></div><span>4.627</span><span></span></div>
+          <div class="row"><span>2025</span><div class="track"><div class="fill moss" style="width:96.9%"></div></div><span>4.574</span><span></span></div>
+          <div class="row"><span>2026*</span><div class="track"><div class="fill brick" style="width:100%"></div></div><span>4.720</span><span></span></div>
+        </div>
+      </div>
+    </div>
+
+    <h2><span class="n">05 — tamanho</span>Pequeno, médio e grande</h2>
+    <p class="lead">Pequeno: menos de 50 m². Médio: 50 a 89 m². Grande: 90 a 149 m². Mais de 80% das vendas são pequeno ou médio. O metro do pequeno e do médio ainda se parecem; o grande já é outro produto.</p>
+    <div class="sizes">
+      <article class="card s">
+        <h3>Pequeno · menos de 50 m²</h3>
+        <div class="big">R$ 4.240</div>
+        <p>35.706 vendas · 40 m² médios · R$ 170 mil</p>
+      </article>
+      <article class="card m">
+        <h3>Médio · 50 a 89 m²</h3>
+        <div class="big">R$ 4.539</div>
+        <p>45.465 vendas · 66 m² médios · R$ 300 mil</p>
+      </article>
+      <article class="card l">
+        <h3>Grande · 90 a 149 m²</h3>
+        <div class="big">R$ 5.865</div>
+        <p>13.535 vendas · 112 m² médios · R$ 649 mil</p>
+      </article>
+    </div>
+
+    <h2><span class="n">06 — transações</span>Quantas vendas, por década e tamanho</h2>
+    <p class="lead">Número de transações. Os anos 1980 vendem sobretudo apartamento pequeno. Os anos 2010, sobretudo médio.</p>
+    <div class="legend">
+      <span><i class="moss"></i>Pequeno, menos de 50 m²</span>
+      <span><i class="ink"></i>Médio, 50 a 89 m²</span>
+      <span><i class="brick"></i>Grande, 90 a 149 m²</span>
+    </div>
+    <div>
+      <div class="cluster"><span class="decade">1950–59</span><div>
+        <div class="mini-row"><div class="mini-track"><div class="fill moss" style="width:8.3%"></div></div><span>1.073</span></div>
+        <div class="mini-row"><div class="mini-track"><div class="fill ink" style="width:20.1%"></div></div><span>2.590</span></div>
+        <div class="mini-row"><div class="mini-track"><div class="fill brick" style="width:8.4%"></div></div><span>1.085</span></div>
+      </div></div>
+      <div class="cluster"><span class="decade">1960–69</span><div>
+        <div class="mini-row"><div class="mini-track"><div class="fill moss" style="width:20.6%"></div></div><span>2.654</span></div>
+        <div class="mini-row"><div class="mini-track"><div class="fill ink" style="width:32.9%"></div></div><span>4.239</span></div>
+        <div class="mini-row"><div class="mini-track"><div class="fill brick" style="width:10.5%"></div></div><span>1.354</span></div>
+      </div></div>
+      <div class="cluster"><span class="decade">1970–79</span><div>
+        <div class="mini-row"><div class="mini-track"><div class="fill moss" style="width:38.0%"></div></div><span>4.884</span></div>
+        <div class="mini-row"><div class="mini-track"><div class="fill ink" style="width:48.7%"></div></div><span>6.262</span></div>
+        <div class="mini-row"><div class="mini-track"><div class="fill brick" style="width:17.3%"></div></div><span>2.229</span></div>
+      </div></div>
+      <div class="cluster"><span class="decade">1980–89</span><div>
+        <div class="mini-row"><div class="mini-track"><div class="fill moss" style="width:77.1%"></div></div><span>9.923</span></div>
+        <div class="mini-row"><div class="mini-track"><div class="fill ink" style="width:64.3%"></div></div><span>8.273</span></div>
+        <div class="mini-row"><div class="mini-track"><div class="fill brick" style="width:7.3%"></div></div><span>933</span></div>
+      </div></div>
+      <div class="cluster"><span class="decade">1990–99</span><div>
+        <div class="mini-row"><div class="mini-track"><div class="fill moss" style="width:10.1%"></div></div><span>1.297</span></div>
+        <div class="mini-row"><div class="mini-track"><div class="fill ink" style="width:25.1%"></div></div><span>3.236</span></div>
+        <div class="mini-row"><div class="mini-track"><div class="fill brick" style="width:9.9%"></div></div><span>1.279</span></div>
+      </div></div>
+      <div class="cluster"><span class="decade">2000–09</span><div>
+        <div class="mini-row"><div class="mini-track"><div class="fill moss" style="width:17.9%"></div></div><span>2.301</span></div>
+        <div class="mini-row"><div class="mini-track"><div class="fill ink" style="width:30.1%"></div></div><span>3.873</span></div>
+        <div class="mini-row"><div class="mini-track"><div class="fill brick" style="width:18.5%"></div></div><span>2.376</span></div>
+      </div></div>
+      <div class="cluster"><span class="decade">2010–19</span><div>
+        <div class="mini-row"><div class="mini-track"><div class="fill moss" style="width:60.6%"></div></div><span>7.794</span></div>
+        <div class="mini-row"><div class="mini-track"><div class="fill ink" style="width:100%"></div></div><span>12.870</span></div>
+        <div class="mini-row"><div class="mini-track"><div class="fill brick" style="width:20.9%"></div></div><span>2.685</span></div>
+      </div></div>
+      <div class="cluster"><span class="decade">2020–26</span><div>
+        <div class="mini-row"><div class="mini-track"><div class="fill moss" style="width:44.5%"></div></div><span>5.732</span></div>
+        <div class="mini-row"><div class="mini-track"><div class="fill ink" style="width:30.3%"></div></div><span>3.896</span></div>
+        <div class="mini-row"><div class="mini-track"><div class="fill brick" style="width:11.4%"></div></div><span>1.466</span></div>
+      </div></div>
+    </div>
+
+    <h2><span class="n">07 — preço</span>Reais por metro quadrado, por década e tamanho</h2>
+    <p class="lead">Apartamento pequeno novo (construído nos anos 2020) sai a R$ 10.057 o metro. O mesmo tamanho, construído nos anos 2000: R$ 3.238. Três vezes o metro, mesma faixa de área.</p>
+    <div class="legend">
+      <span><i class="moss"></i>Pequeno, menos de 50 m²</span>
+      <span><i class="ink"></i>Médio, 50 a 89 m²</span>
+      <span><i class="brick"></i>Grande, 90 a 149 m²</span>
+    </div>
+    <div>
+      <div class="cluster"><span class="decade">1950–59</span><div>
+        <div class="mini-row"><div class="mini-track"><div class="fill moss" style="width:41.1%"></div></div><span>4.453</span></div>
+        <div class="mini-row"><div class="mini-track"><div class="fill ink" style="width:33.3%"></div></div><span>3.606</span></div>
+        <div class="mini-row"><div class="mini-track"><div class="fill brick" style="width:31.4%"></div></div><span>3.404</span></div>
+      </div></div>
+      <div class="cluster"><span class="decade">1960–69</span><div>
+        <div class="mini-row"><div class="mini-track"><div class="fill moss" style="width:42.2%"></div></div><span>4.578</span></div>
+        <div class="mini-row"><div class="mini-track"><div class="fill ink" style="width:34.0%"></div></div><span>3.691</span></div>
+        <div class="mini-row"><div class="mini-track"><div class="fill brick" style="width:36.1%"></div></div><span>3.909</span></div>
+      </div></div>
+      <div class="cluster"><span class="decade">1970–79</span><div>
+        <div class="mini-row"><div class="mini-track"><div class="fill moss" style="width:39.8%"></div></div><span>4.319</span></div>
+        <div class="mini-row"><div class="mini-track"><div class="fill ink" style="width:35.6%"></div></div><span>3.858</span></div>
+        <div class="mini-row"><div class="mini-track"><div class="fill brick" style="width:43.1%"></div></div><span>4.675</span></div>
+      </div></div>
+      <div class="cluster"><span class="decade">1980–89</span><div>
+        <div class="mini-row"><div class="mini-track"><div class="fill moss" style="width:35.2%"></div></div><span>3.817</span></div>
+        <div class="mini-row"><div class="mini-track"><div class="fill ink" style="width:33.2%"></div></div><span>3.596</span></div>
+        <div class="mini-row"><div class="mini-track"><div class="fill brick" style="width:45.1%"></div></div><span>4.895</span></div>
+      </div></div>
+      <div class="cluster"><span class="decade">1990–99</span><div>
+        <div class="mini-row"><div class="mini-track"><div class="fill moss" style="width:37.9%"></div></div><span>4.110</span></div>
+        <div class="mini-row"><div class="mini-track"><div class="fill ink" style="width:40.9%"></div></div><span>4.431</span></div>
+        <div class="mini-row"><div class="mini-track"><div class="fill brick" style="width:53.8%"></div></div><span>5.833</span></div>
+      </div></div>
+      <div class="cluster"><span class="decade">2000–09</span><div>
+        <div class="mini-row"><div class="mini-track"><div class="fill moss" style="width:29.9%"></div></div><span>3.238</span></div>
+        <div class="mini-row"><div class="mini-track"><div class="fill ink" style="width:53.3%"></div></div><span>5.780</span></div>
+        <div class="mini-row"><div class="mini-track"><div class="fill brick" style="width:67.8%"></div></div><span>7.350</span></div>
+      </div></div>
+      <div class="cluster"><span class="decade">2010–19</span><div>
+        <div class="mini-row"><div class="mini-track"><div class="fill moss" style="width:37.1%"></div></div><span>4.021</span></div>
+        <div class="mini-row"><div class="mini-track"><div class="fill ink" style="width:52.8%"></div></div><span>5.723</span></div>
+        <div class="mini-row"><div class="mini-track"><div class="fill brick" style="width:74.7%"></div></div><span>8.102</span></div>
+      </div></div>
+      <div class="cluster"><span class="decade">2020–26</span><div>
+        <div class="mini-row"><div class="mini-track"><div class="fill moss" style="width:92.8%"></div></div><span>10.057</span></div>
+        <div class="mini-row"><div class="mini-track"><div class="fill ink" style="width:75.2%"></div></div><span>8.159</span></div>
+        <div class="mini-row"><div class="mini-track"><div class="fill brick" style="width:100%"></div></div><span>10.843</span></div>
+      </div></div>
+    </div>
+
+    <h2><span class="n">08 — no tempo, por década</span>O usado ficou parado. Os anos 2010 baratearam. Os anos 2020 dispararam.</h2>
+    <p class="lead">Cada célula é o real por metro quadrado mediano daquele ano de venda, para prédios daquela década de construção. Anos 1950 a 1980 quase não saem do lugar. Prédios de 2010 a 2019 caíram de 5.973 (2020) para 4.824 (2025). Prédios de 2020 em diante foram de 7.407 a 10.320.</p>
+    <div class="heat" style="margin-top:18px">
+      <b></b><b>1950</b><b>1960</b><b>1970</b><b>1980</b><b>1990</b><b>2000</b><b>2010</b><b>2020</b>
+      <b>2020</b>
+      <div class="cell" style="background:#d9c8a8">3.581</div>
+      <div class="cell" style="background:#d4c19c">3.825</div>
+      <div class="cell" style="background:#cbb48a">4.072</div>
+      <div class="cell" style="background:#d6c4a2">3.745</div>
+      <div class="cell" style="background:#c09d6e">4.739</div>
+      <div class="cell" style="background:#b07d4a">5.698</div>
+      <div class="cell" style="background:#ab753e">5.973</div>
+      <div class="cell" style="background:#e8dcc8;color:#8a7b6a">—</div>
+      <b>2021</b>
+      <div class="cell" style="background:#d8c6a5">3.660</div>
+      <div class="cell" style="background:#cdb78e">4.000</div>
+      <div class="cell" style="background:#cab288">4.115</div>
+      <div class="cell" style="background:#d2be97">3.869</div>
+      <div class="cell" style="background:#bb945e">4.999</div>
+      <div class="cell" style="background:#a56b32;color:#faf6ee">6.166</div>
+      <div class="cell" style="background:#ab753e">5.942</div>
+      <div class="cell" style="background:#8d4a1c;color:#faf6ee">7.407</div>
+      <b>2022</b>
+      <div class="cell" style="background:#d8c6a5">3.616</div>
+      <div class="cell" style="background:#cdb78e">3.985</div>
+      <div class="cell" style="background:#c9b086">4.172</div>
+      <div class="cell" style="background:#d6c4a2">3.718</div>
+      <div class="cell" style="background:#bd9864">4.846</div>
+      <div class="cell" style="background:#a86f38;color:#faf6ee">6.002</div>
+      <div class="cell" style="background:#b07d4a">5.603</div>
+      <div class="cell" style="background:#7a3814;color:#faf6ee">8.910</div>
+      <b>2023</b>
+      <div class="cell" style="background:#d4c19c">3.791</div>
+      <div class="cell" style="background:#d0bb94">3.891</div>
+      <div class="cell" style="background:#cab288">4.105</div>
+      <div class="cell" style="background:#d7c6a6">3.658</div>
+      <div class="cell" style="background:#bb945e">5.024</div>
+      <div class="cell" style="background:#ab753e">5.930</div>
+      <div class="cell" style="background:#b98a55">5.106</div>
+      <div class="cell" style="background:#732f10;color:#faf6ee">9.198</div>
+      <b>2024</b>
+      <div class="cell" style="background:#d4c19c">3.804</div>
+      <div class="cell" style="background:#cfb991">3.962</div>
+      <div class="cell" style="background:#c9b086">4.165</div>
+      <div class="cell" style="background:#d6c4a2">3.737</div>
+      <div class="cell" style="background:#bd9864">4.799</div>
+      <div class="cell" style="background:#ad7842">5.782</div>
+      <div class="cell" style="background:#b68650">5.222</div>
+      <div class="cell" style="background:#732f10;color:#faf6ee">9.228</div>
+      <b>2025</b>
+      <div class="cell" style="background:#d9c8a8">3.587</div>
+      <div class="cell" style="background:#d0bb94">3.916</div>
+      <div class="cell" style="background:#c9b086">4.178</div>
+      <div class="cell" style="background:#d4c19c">3.774</div>
+      <div class="cell" style="background:#bd9864">4.801</div>
+      <div class="cell" style="background:#ab753e">5.861</div>
+      <div class="cell" style="background:#bf9b6b">4.824</div>
+      <div class="cell" style="background:#5c220c;color:#faf6ee">10.320</div>
+      <b>2026*</b>
+      <div class="cell" style="background:#d6c4a2">3.709</div>
+      <div class="cell" style="background:#cab288">4.123</div>
+      <div class="cell" style="background:#c6ac80">4.284</div>
+      <div class="cell" style="background:#d6c4a2">3.689</div>
+      <div class="cell" style="background:#bb945e">4.996</div>
+      <div class="cell" style="background:#ab753e">5.868</div>
+      <div class="cell" style="background:#bd9864">4.964</div>
+      <div class="cell" style="background:#68280e;color:#faf6ee">9.792</div>
+    </div>
+
+    <div class="note">
+      <strong style="color:var(--ink)">Método.</strong>
+      Fonte: ITBI aberto da Secretaria Municipal da Fazenda (dadosabertos.poa.br).
+      Só apartamento — sem cobertura, casa, sala, loja ou terreno.
+      Só transmissão de 100% do imóvel. Área privativa entre 20 e 250&nbsp;m².
+      Só imóveis com ano de construção informado.
+      Real por metro quadrado = base de cálculo ÷ área privativa. Números são mediana, não média.
+      2026 incompleto.
+      O mix mudou: apartamento pequeno era 31% das vendas em 2020 e 40% em 2025 — a mediana da cidade é puxada para baixo por mais unidade compacta.
+    </div>
+  </div>
+</body>
+</html>
