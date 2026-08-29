@@ -133,7 +133,7 @@ export default async function InsightsPage() {
           <h1 className="mt-3 max-w-3xl text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
             O mercado de apartamentos em Porto Alegre.
           </h1>
-          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+          <p className="mt-2 max-w-2xl text-base leading-relaxed text-muted-foreground">
             ITBI de {overview.yearMin} a {overview.yearMax}, com{" "}
             {formatNumber(overview.total)} vendas. Usamos medianas porque
             outliers de milhões por m² distorcem a média.
@@ -243,7 +243,7 @@ export default async function InsightsPage() {
           <CardContent>
             <TrendChart data={trend} />
             <YearStrip trend={trend} />
-            <p className="mt-2 text-[11px] text-muted-foreground">
+            <p className="mt-2 text-sm text-muted-foreground">
               A linha pontilhada é a mediana de 2020 atualizada pelo IPCA
               (IBGE / BCB SGS 433). Em 2026 o índice vai até julho.
             </p>
@@ -260,7 +260,7 @@ export default async function InsightsPage() {
           </CardHeader>
           <CardContent>
             <VolumeChart data={trend} />
-            <p className="mt-3 text-xs text-muted-foreground">
+            <p className="mt-3 text-sm text-muted-foreground">
               Os 10 bairros com mais vendas concentram {formatPct(top10share).replace("+", "")} do
               volume. O Centro Histórico lidera em quantidade.
             </p>
@@ -375,7 +375,7 @@ export default async function InsightsPage() {
           <CardHeader>
             <CardTitle className="text-base">Concentração</CardTitle>
           </CardHeader>
-          <CardContent className="text-sm leading-relaxed text-muted-foreground">
+          <CardContent className="text-sm leading-relaxed text-foreground">
             Dez bairros somam {formatNumber(top10n)} vendas ({formatPct(top10share).replace("+", "")}).
             {topVolume[0] && (
               <>
@@ -391,11 +391,11 @@ export default async function InsightsPage() {
           <CardHeader>
             <CardTitle className="text-base">Como ler</CardTitle>
           </CardHeader>
-          <CardContent className="text-sm leading-relaxed text-muted-foreground">
+          <CardContent className="text-sm leading-relaxed text-foreground">
             O ITBI é o preço declarado ao fisco, com piso, e 2026 está
             incompleto. Usamos mediana porque outliers distorcem a média de
             área e de R$/m². Detalhe em{" "}
-            <Link href="/sobre" className="underline underline-offset-2 hover:text-foreground">
+            <Link href="/sobre" className="font-medium underline underline-offset-2">
               metodologia
             </Link>
             .
@@ -404,7 +404,7 @@ export default async function InsightsPage() {
       </section>
 
       <p className="mt-10 text-center text-sm text-muted-foreground">
-        <Link href="/bairros" className="inline-flex items-center gap-1 hover:text-foreground">
+        <Link href="/bairros" className="inline-flex items-center gap-1 font-medium text-foreground underline-offset-4 hover:underline">
           Abrir todos os bairros <ArrowRight className="size-4" />
         </Link>
       </p>
@@ -426,7 +426,7 @@ function Takeaway({
       <span className="font-mono text-sm text-muted-foreground">{String(n).padStart(2, "0")}</span>
       <div>
         <p className="font-medium tracking-tight">{title}</p>
-        <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{children}</p>
+        <p className="mt-1 text-sm leading-relaxed text-foreground">{children}</p>
       </div>
     </li>
   );

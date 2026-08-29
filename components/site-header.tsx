@@ -17,10 +17,10 @@ const links = [
 
 export function SiteHeader() {
   return (
-    <header className="sticky top-0 z-40 w-full border-b bg-background/80 backdrop-blur">
+    <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur">
       <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
-        <Link href="/" className="flex items-center gap-2">
-          <span className="flex size-7 items-center justify-center rounded-md bg-foreground text-background">
+        <Link href="/" className="flex items-center gap-2" aria-label="ITBI Intel, página inicial">
+          <span className="flex size-7 items-center justify-center rounded-md bg-foreground text-background" aria-hidden>
             <BarChart3 className="size-4" />
           </span>
           <span className="text-sm font-semibold tracking-tight">
@@ -28,7 +28,7 @@ export function SiteHeader() {
           </span>
         </Link>
 
-        <nav className="flex items-center gap-1">
+        <nav aria-label="Principal" className="flex items-center gap-1">
           {links.map((l) => (
             <NavLink key={l.href} href={l.href} label={l.label} />
           ))}
@@ -51,8 +51,8 @@ function NavLink({ href, label }: { href: string; label: string }) {
       variant="ghost"
       size="sm"
       nativeButton={false}
-      render={<Link href={href} />}
-      className={active ? "bg-muted" : "text-muted-foreground"}
+      render={<Link href={href} aria-current={active ? "page" : undefined} />}
+      className={active ? "bg-muted text-foreground" : "text-muted-foreground"}
     >
       {label}
     </Button>
@@ -71,7 +71,7 @@ function ThemeToggle() {
       size="icon"
       className={cn("size-8", !mounted && "invisible")}
       onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
-      aria-label="Alternar tema"
+      aria-label={resolvedTheme === "dark" ? "Ativar tema claro" : "Ativar tema escuro"}
     >
       {resolvedTheme === "dark" ? (
         <Sun className="size-4" />

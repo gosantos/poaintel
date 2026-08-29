@@ -63,7 +63,7 @@ export function YearHeatmap({
                   >
                     {bairroDisplay(r.bairro)}
                   </Link>
-                  <div className="text-[11px] text-muted-foreground">
+                  <div className="text-xs text-muted-foreground">
                     {formatNumber(r.nAll)} tx
                   </div>
                 </TableCell>
@@ -80,7 +80,7 @@ export function YearHeatmap({
                     );
                   }
                   const rel = (cell.medianRsm2 - min) / span;
-                  const alpha = 0.06 + 0.5 * rel;
+                  const alpha = 0.05 + 0.28 * rel;
                   return (
                     <TableCell
                       key={y}
@@ -89,10 +89,10 @@ export function YearHeatmap({
                         backgroundColor: `color-mix(in oklab, var(--chart-1) ${alpha * 100}%, transparent)`,
                       }}
                     >
-                      <div className="font-mono text-xs tabular-nums">
+                      <div className="font-mono text-sm tabular-nums">
                         {rsm2(cell.medianRsm2)}
                       </div>
-                      <div className="text-[10px] text-muted-foreground">
+                      <div className="text-xs text-muted-foreground">
                         {formatNumber(cell.n)}
                       </div>
                     </TableCell>
@@ -103,7 +103,7 @@ export function YearHeatmap({
           </TableBody>
         </Table>
       </div>
-      <p className="mt-2 text-[11px] text-muted-foreground">
+      <p className="mt-2 text-sm text-muted-foreground">
         *2026 parcial. Cada célula mostra a mediana R$/m² e o volume do ano. A
         cor é relativa ao intervalo da tabela.
       </p>

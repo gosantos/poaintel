@@ -60,7 +60,7 @@ export function BenchmarkMatrix({
                   );
                 }
                 const rel = cell.p50 / maxP50;
-                const alpha = 0.06 + 0.42 * rel;
+                const alpha = 0.05 + 0.26 * rel;
                 return (
                   <TableCell
                     key={band}
@@ -72,7 +72,7 @@ export function BenchmarkMatrix({
                     <div className="font-mono text-sm font-medium tabular-nums">
                       {rsm2(cell.p50)}
                     </div>
-                    <div className="text-[11px] text-muted-foreground">
+                     <div className="text-xs text-muted-foreground">
                       {formatNumber(cell.n)} tx
                     </div>
                   </TableCell>

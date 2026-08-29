@@ -119,7 +119,7 @@ export function TierTrendTable({
 
   return (
     <div className="mt-4 overflow-x-auto">
-      <table className="w-full text-xs">
+       <table className="w-full text-sm">
         <thead>
           <tr className="text-muted-foreground">
             <th className="px-1 pb-1 text-left font-medium">Época</th>

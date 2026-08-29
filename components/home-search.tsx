@@ -22,15 +22,24 @@ export function HomeSearch() {
   return (
     <form
       onSubmit={submit}
+      role="search"
       className="flex w-full max-w-xl flex-col gap-2 sm:flex-row"
     >
+      <label htmlFor="home-rua" className="sr-only">
+        Rua ou avenida
+      </label>
       <Input
+        id="home-rua"
         value={rua}
         onChange={(e) => setRua(e.target.value)}
         placeholder="Digite a rua ou avenida… ex.: Fernando Machado"
         className="h-12 flex-1 bg-card text-base"
       />
+      <label htmlFor="home-numero" className="sr-only">
+        Número
+      </label>
       <Input
+        id="home-numero"
         value={numero}
         onChange={(e) => setNumero(e.target.value)}
         placeholder="Nº"

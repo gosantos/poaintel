@@ -156,7 +156,7 @@ export default async function BuscaPage({
             <SearchX className="size-10 text-muted-foreground" />
             <div>
               <p className="font-medium">Nenhuma transação encontrada</p>
-              <p className="mt-1 text-sm text-muted-foreground">
+        <p className="mt-1 text-base leading-relaxed text-muted-foreground">
                 Tente um trecho menor de rua, tire o número ou amplie os
                 filtros.
               </p>
@@ -292,7 +292,7 @@ function UnitTable({ rows }: { rows: TxRow[] }) {
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b text-left text-xs uppercase text-muted-foreground">
+          <tr className="border-b text-left text-sm text-foreground">
             <th className="py-2 pr-4 font-medium">Apto</th>
             <th className="py-2 pr-4 text-right font-medium">Área</th>
             <th className="py-2 pr-4 text-right font-medium">Média</th>

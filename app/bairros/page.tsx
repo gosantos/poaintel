@@ -28,7 +28,7 @@ export default async function BairrosPage() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
       <h1 className="text-2xl font-semibold tracking-tight">Bairros</h1>
-      <p className="mt-1 text-sm text-muted-foreground">
+      <p className="mt-1 text-base leading-relaxed text-muted-foreground">
         Volume e mediana R$/m² por bairro, de 2020 a 2026.
       </p>
 
@@ -58,7 +58,8 @@ export default async function BairrosPage() {
                       className="flex items-center gap-3 font-medium hover:underline"
                     >
                       <span
-                        className="h-2.5 w-2.5 rounded-sm"
+                        className="h-2.5 w-2.5 shrink-0 rounded-sm"
+                        aria-hidden
                         style={{
                           backgroundColor: `color-mix(in oklab, var(--chart-1) ${
                             0.15 + 0.85 * (b.medianRsm2 / max)
@@ -77,12 +78,8 @@ export default async function BairrosPage() {
                   <TableCell className="hidden text-right sm:table-cell">
                     {overview.medianRsm2 > 0 && (
                       <Badge
-                        variant="outline"
-                        className={
-                          b.medianRsm2 < overview.medianRsm2
-                            ? "border-transparent bg-emerald-500/15 font-mono text-emerald-700 dark:text-emerald-400"
-                            : "font-mono"
-                        }
+                        variant={b.medianRsm2 < overview.medianRsm2 ? "success" : "outline"}
+                        className="font-mono"
                       >
                         {formatPct(pctChange(overview.medianRsm2, b.medianRsm2) ?? 0)}
                       </Badge>

@@ -65,6 +65,7 @@ export function SearchForm({ bairros }: { bairros: BairroOption[] }) {
   return (
     <form
       onSubmit={submit}
+      role="search"
       className="grid gap-4 rounded-xl border bg-card p-4 shadow-sm sm:grid-cols-2 lg:grid-cols-6"
     >
       <div className="grid gap-1.5 lg:col-span-2">
@@ -87,12 +88,12 @@ export function SearchForm({ bairros }: { bairros: BairroOption[] }) {
         />
       </div>
       <div className="grid gap-1.5">
-        <Label>Bairro</Label>
+        <Label id="search-bairro-label">Bairro</Label>
         <Select
           value={bairro}
           onValueChange={(v) => setBairro(!v || v === "__any" ? "" : v)}
         >
-          <SelectTrigger>
+          <SelectTrigger className="w-full" aria-labelledby="search-bairro-label">
             <SelectValue placeholder="Qualquer bairro" />
           </SelectTrigger>
           <SelectContent className="max-h-72">
@@ -106,12 +107,12 @@ export function SearchForm({ bairros }: { bairros: BairroOption[] }) {
         </Select>
       </div>
       <div className="grid gap-1.5">
-        <Label>Ano</Label>
+        <Label id="search-ano-label">Ano</Label>
         <Select
           value={ano}
           onValueChange={(v) => setAno(!v || v === "__all" ? "" : v)}
         >
-          <SelectTrigger>
+          <SelectTrigger className="w-full" aria-labelledby="search-ano-label">
             <SelectValue placeholder="Todos" />
           </SelectTrigger>
           <SelectContent>
@@ -170,7 +171,7 @@ export function SearchForm({ bairros }: { bairros: BairroOption[] }) {
           type="checkbox"
           checked={porUnidade}
           onChange={(e) => setPorUnidade(e.target.checked)}
-          className="size-4 rounded border-input accent-foreground"
+          className="size-5 rounded border-input accent-foreground"
         />
         Agrupar por unidade (média R$/m² por apto)
       </label>

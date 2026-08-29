@@ -30,14 +30,7 @@ export interface TxRow {
 export function CompBadge({ pct }: { pct: number }) {
   const down = pct <= 0;
   return (
-    <Badge
-      variant={down ? "secondary" : "outline"}
-      className={
-        down
-          ? "border-transparent bg-emerald-500/15 font-mono text-emerald-700 dark:text-emerald-400"
-          : "font-mono text-amber-700 dark:text-amber-400"
-      }
-    >
+    <Badge variant={down ? "success" : "warning"}>
       {formatPct(pct)}
     </Badge>
   );
@@ -67,11 +60,11 @@ export function TransactionsTable({
         <TableBody>
           {rows.map((r) => (
             <TableRow key={r.id}>
-              <TableCell className="font-mono text-xs">
+              <TableCell className="font-mono text-sm">
                 {fullDate(r.dataEstimativa)}
               </TableCell>
               {showAddress && (
-                <TableCell className="max-w-48 truncate text-xs">
+                <TableCell className="max-w-48 truncate text-sm">
                   {r.logradouro
                     ? `${r.logradouro}${r.nEndereco ? `, ${r.nEndereco}` : ""}`
                     : "—"}
@@ -81,7 +74,7 @@ export function TransactionsTable({
                 <div className="flex items-center gap-2">
                   <span>{r.nUnidade || "—"}</span>
                   {r.tier && (
-                    <span className="text-[11px] text-muted-foreground">
+                    <span className="text-xs text-muted-foreground">
                       {tierLabel(r.tier)}
                     </span>
                   )}

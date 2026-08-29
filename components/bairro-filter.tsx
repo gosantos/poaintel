@@ -6,8 +6,13 @@ import { Search } from "lucide-react";
 export function BairroFilter() {
   return (
     <div className="relative max-w-md">
-      <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+      <label htmlFor="bairro-filter" className="sr-only">
+        Filtrar bairros
+      </label>
+      <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
       <Input
+        id="bairro-filter"
+        type="search"
         placeholder="Filtrar bairros…"
         className="pl-9"
         onChange={(e) => {

@@ -69,16 +69,16 @@ export default async function HomePage() {
           <h1 className="max-w-2xl text-3xl font-semibold tracking-tight text-balance sm:text-5xl">
             Preço real de apartamentos em Porto Alegre.
           </h1>
-          <p className="mt-4 max-w-xl text-base text-muted-foreground sm:text-lg">
+          <p className="mt-4 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
             Vendas registradas no ITBI de 2020 a 2026. Pesquise um endereço,
             compare com o bairro e veja o mercado por construção e tamanho.
           </p>
           <div className="mt-8">
             <HomeSearch />
           </div>
-          <p className="mt-3 text-xs text-muted-foreground">
-            Ex.: <Link href="/busca?rua=fernando+machado&numero=813" className="underline underline-offset-2 hover:text-foreground">Rua Fernando Machado 813</Link> ·{" "}
-            <Link href="/busca?rua=duque+de+caxias" className="underline underline-offset-2 hover:text-foreground">Duque de Caxias</Link>
+          <p className="mt-3 text-sm text-muted-foreground">
+            Ex.: <Link href="/busca?rua=fernando+machado&numero=813" className="font-medium text-foreground underline underline-offset-2">Rua Fernando Machado 813</Link> ·{" "}
+            <Link href="/busca?rua=duque+de+caxias" className="font-medium text-foreground underline underline-offset-2">Duque de Caxias</Link>
           </p>
         </div>
       </section>
@@ -126,7 +126,7 @@ export default async function HomePage() {
             </CardHeader>
             <CardContent>
               <TrendChart data={trend} />
-              <p className="mt-2 text-[11px] text-muted-foreground">
+              <p className="mt-2 text-sm text-muted-foreground">
                 A linha pontilhada é a mediana do primeiro ano da série,
                 atualizada pelo IPCA (IBGE / BCB SGS 433). Em 2026 o IPCA vai
                 até julho.
@@ -171,7 +171,7 @@ export default async function HomePage() {
           </div>
           <Link
             href="/bairros"
-            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+            className="inline-flex items-center gap-1 text-sm font-medium text-foreground underline-offset-4 hover:underline"
           >
             Ver todos <ArrowRight className="size-4" />
           </Link>
@@ -225,12 +225,8 @@ export default async function HomePage() {
                         <TableCell className="text-right">
                           {delta !== null && (
                             <Badge
-                              variant="outline"
-                              className={
-                                delta < 0
-                                  ? "border-transparent bg-emerald-500/15 font-mono text-emerald-700 dark:text-emerald-400"
-                                  : "font-mono"
-                              }
+                              variant={delta < 0 ? "success" : "outline"}
+                              className="font-mono"
                             >
                               {formatPct(delta)}
                             </Badge>
@@ -259,7 +255,7 @@ export default async function HomePage() {
           </div>
           <Link
             href="/insights"
-            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+            className="inline-flex items-center gap-1 text-sm font-medium text-foreground underline-offset-4 hover:underline"
           >
             Briefing completo <ArrowRight className="size-4" />
           </Link>
@@ -269,7 +265,7 @@ export default async function HomePage() {
             <CardHeader>
               <CardTitle className="text-base">O mix puxa a mediana</CardTitle>
             </CardHeader>
-            <CardContent className="text-sm text-muted-foreground">
+            <CardContent className="text-sm leading-relaxed text-foreground">
               {price5y !== null && vol5y !== null ? (
                 <>
                   De 2020 a {last?.year} a mediana da cidade subiu {formatPct(price5y)}{" "}
@@ -284,7 +280,7 @@ export default async function HomePage() {
             <CardHeader>
               <CardTitle className="text-base">O bairro muda o preço</CardTitle>
             </CardHeader>
-            <CardContent className="text-sm text-muted-foreground">
+            <CardContent className="text-sm leading-relaxed text-foreground">
               {high[0] && low[0] ? (
                 <>
                   {bairroDisplay(high[0].bairro)} medeia {rsm2(high[0].medianRsm2)} e{" "}
@@ -300,7 +296,7 @@ export default async function HomePage() {
             <CardHeader>
               <CardTitle className="text-base">2024 e 2025, bairro a bairro</CardTitle>
             </CardHeader>
-            <CardContent className="text-sm text-muted-foreground">
+            <CardContent className="text-sm leading-relaxed text-foreground">
               {hot.length > 0 ? (
                 <>
                   {hot.map((m) => bairroDisplay(m.bairro)).join(", ")} subiram mais
@@ -321,7 +317,7 @@ export default async function HomePage() {
               <ScanSearch className="size-5 text-primary" />
               <CardTitle className="mt-3">Preço real de venda</CardTitle>
             </CardHeader>
-            <CardContent className="text-sm text-muted-foreground">
+            <CardContent className="text-sm leading-relaxed text-foreground">
               O ITBI registra vendas concluídas, com milhares de transações por ano.
             </CardContent>
           </Card>
@@ -330,7 +326,7 @@ export default async function HomePage() {
               <Scale className="size-5 text-primary" />
               <CardTitle className="mt-3">Benchmark por bairro</CardTitle>
             </CardHeader>
-            <CardContent className="text-sm text-muted-foreground">
+            <CardContent className="text-sm leading-relaxed text-foreground">
               Compare qualquer unidade com a mediana do bairro, por época de
               construção e tamanho.
             </CardContent>
@@ -340,7 +336,7 @@ export default async function HomePage() {
               <Landmark className="size-5 text-primary" />
               <CardTitle className="mt-3">2020 a 2026</CardTitle>
             </CardHeader>
-            <CardContent className="text-sm text-muted-foreground">
+            <CardContent className="text-sm leading-relaxed text-foreground">
               Sete anos por rua, bairro, construção e área. Fonte:
               dadosabertos.poa.br.
             </CardContent>

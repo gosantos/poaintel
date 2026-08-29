@@ -34,7 +34,7 @@ export function MoversTable({ rows }: { rows: BairroMover[] }) {
               >
                 {bairroDisplay(r.bairro)}
               </Link>
-              <div className="text-[11px] text-muted-foreground">
+              <div className="text-xs text-muted-foreground">
                 {formatNumber(r.n0)} → {formatNumber(r.n1)} tx
               </div>
             </TableCell>
@@ -46,14 +46,8 @@ export function MoversTable({ rows }: { rows: BairroMover[] }) {
             </TableCell>
             <TableCell className="text-right">
               <Badge
-                variant="outline"
-                className={
-                  r.yoy < 0
-                    ? "border-transparent bg-emerald-500/15 font-mono text-emerald-700 dark:text-emerald-400"
-                    : r.yoy > 8
-                      ? "border-transparent bg-amber-500/15 font-mono text-amber-800 dark:text-amber-400"
-                      : "font-mono"
-                }
+                variant={r.yoy < 0 ? "success" : r.yoy > 8 ? "warning" : "outline"}
+                className="font-mono"
               >
                 {formatPct(r.yoy)}
               </Badge>
