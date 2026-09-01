@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/table";
 import { StatCard } from "@/components/stat-card";
 import { HomeSearch } from "@/components/home-search";
+import { HeroSnapshot } from "@/components/hero-snapshot";
 import { TrendChart } from "@/components/trend-chart";
 import { VolumeChart } from "@/components/volume-chart";
 import { TierTrendChart, TierTrendTable } from "@/components/tier-trend-chart";
@@ -35,8 +36,6 @@ import {
 } from "@/db/queries";
 import { slugify } from "@/lib/data";
 import { pctChange } from "@/lib/market";
-
-export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const [overview, trend, topBairros, high, low, movers, tierTrend] = await Promise.all([
@@ -62,24 +61,54 @@ export default async function HomePage() {
   return (
     <div className="relative">
       <section className="border-b bg-gradient-to-b from-muted/60 to-background">
-        <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-20">
-          <Badge variant="outline" className="mb-4">
-            Dados abertos · Secretaria da Fazenda de Porto Alegre
-          </Badge>
-          <h1 className="max-w-2xl text-3xl font-semibold tracking-tight text-balance sm:text-5xl">
-            Preço real de apartamentos em Porto Alegre.
-          </h1>
-          <p className="mt-4 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-            Vendas registradas no ITBI de 2020 a 2026. Pesquise um endereço,
-            compare com o bairro e veja o mercado por construção e tamanho.
-          </p>
-          <div className="mt-8">
-            <HomeSearch />
+        <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 py-14 sm:px-6 sm:py-20 lg:grid-cols-[minmax(0,1fr)_360px]">
+          <div>
+            <Badge variant="outline" className="mb-4">
+              Dados abertos · Secretaria da Fazenda de Porto Alegre
+            </Badge>
+            <h1 className="max-w-2xl text-3xl font-semibold tracking-tight text-balance sm:text-5xl">
+              Preço real de apartamentos em Porto Alegre.
+            </h1>
+            <p className="mt-4 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
+              Vendas registradas no ITBI de 2020 a 2026. Pesquise um endereço,
+              compare com o bairro e veja o mercado por construção e tamanho.
+            </p>
+            <div className="mt-8">
+              <HomeSearch />
+            </div>
+            <p className="mt-3 text-sm text-muted-foreground">
+              Ex.: <Link href="/busca?rua=fernando+machado&numero=813" className="font-medium text-foreground underline underline-offset-2">Rua Fernando Machado 813</Link> ·{" "}
+              <Link href="/busca?rua=duque+de+caxias" className="font-medium text-foreground underline underline-offset-2">Duque de Caxias</Link>
+            </p>
           </div>
-          <p className="mt-3 text-sm text-muted-foreground">
-            Ex.: <Link href="/busca?rua=fernando+machado&numero=813" className="font-medium text-foreground underline underline-offset-2">Rua Fernando Machado 813</Link> ·{" "}
-            <Link href="/busca?rua=duque+de+caxias" className="font-medium text-foreground underline underline-offset-2">Duque de Caxias</Link>
-          </p>
+          {last && (
+            <div className="hidden lg:block">
+              <HeroSnapshot
+                lastYear={last.year}
+                lastMedian={last.median}
+                lastN={last.n}
+                yoy={yoy}
+                high={
+                  high[0]
+                    ? {
+                        name: high[0].bairro,
+                        slug: slugify(high[0].bairroNorm),
+                        medianRsm2: high[0].medianRsm2,
+                      }
+                    : undefined
+                }
+                low={
+                  low[0]
+                    ? {
+                        name: low[0].bairro,
+                        slug: slugify(low[0].bairroNorm),
+                        medianRsm2: low[0].medianRsm2,
+                      }
+                    : undefined
+                }
+              />
+            </div>
+          )}
         </div>
       </section>
 
@@ -171,7 +200,7 @@ export default async function HomePage() {
           </div>
           <Link
             href="/bairros"
-            className="inline-flex items-center gap-1 text-sm font-medium text-foreground underline-offset-4 hover:underline"
+            className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap text-sm font-medium text-foreground underline-offset-4 hover:underline"
           >
             Ver todos <ArrowRight className="size-4" />
           </Link>
@@ -255,7 +284,7 @@ export default async function HomePage() {
           </div>
           <Link
             href="/insights"
-            className="inline-flex items-center gap-1 text-sm font-medium text-foreground underline-offset-4 hover:underline"
+            className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap text-sm font-medium text-foreground underline-offset-4 hover:underline"
           >
             Briefing completo <ArrowRight className="size-4" />
           </Link>

@@ -28,7 +28,6 @@ import {
   getTrend,
 } from "@/db/queries";
 
-export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Intel de mercado" };
 
 const TIER_ORDER = [...TIERS, "?"];

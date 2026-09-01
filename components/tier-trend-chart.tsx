@@ -64,6 +64,10 @@ export function TierTrendChart({
           tickLine={false}
           axisLine={false}
           width={44}
+          domain={[
+            (dataMin: number) => Math.floor((dataMin - 200) / 500) * 500,
+            (dataMax: number) => Math.ceil((dataMax + 200) / 500) * 500,
+          ]}
           tickFormatter={(v: number) => `${formatNumber(v)}`}
         />
         <ChartTooltip

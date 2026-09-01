@@ -20,7 +20,10 @@ import {
   getTrend,
 } from "@/db/queries";
 
-export const dynamic = "force-dynamic";
+export async function generateStaticParams() {
+  const bairros = await getBairros();
+  return bairros.map((b) => ({ slug: slugify(b.bairroNorm) }));
+}
 
 export async function generateMetadata({
   params,

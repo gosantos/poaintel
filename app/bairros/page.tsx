@@ -18,7 +18,6 @@ import { slugify } from "@/lib/data";
 import { pctChange } from "@/lib/market";
 import { getBairros, getOverview } from "@/db/queries";
 
-export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Bairros" };
 
 export default async function BairrosPage() {

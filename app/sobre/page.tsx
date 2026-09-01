@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Metodologia" };
 
 export default function SobrePage() {
