@@ -1,5 +1,5 @@
 export const TRANSACTIONS_DDL = `
-CREATE TABLE transactions (
+CREATE TABLE IF NOT EXISTS transactions (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   year INTEGER NOT NULL,
   data_estimativa TEXT NOT NULL,
@@ -27,9 +27,9 @@ CREATE TABLE transactions (
   tier TEXT,
   band TEXT
 );
-CREATE INDEX idx_bairro ON transactions (bairro_norm);
-CREATE INDEX idx_logradouro ON transactions (logradouro_norm);
-CREATE INDEX idx_endereco ON transactions (logradouro_norm, n_endereco);
-CREATE INDEX idx_bairro_tier_band ON transactions (bairro_norm, tier, band);
-CREATE INDEX idx_year ON transactions (year);
+CREATE INDEX IF NOT EXISTS idx_bairro ON transactions (bairro_norm);
+CREATE INDEX IF NOT EXISTS idx_logradouro ON transactions (logradouro_norm);
+CREATE INDEX IF NOT EXISTS idx_endereco ON transactions (logradouro_norm, n_endereco);
+CREATE INDEX IF NOT EXISTS idx_bairro_tier_band ON transactions (bairro_norm, tier, band);
+CREATE INDEX IF NOT EXISTS idx_year ON transactions (year);
 `;

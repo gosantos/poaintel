@@ -6,7 +6,7 @@ import { TRANSACTIONS_DDL } from "../db/ddl";
 import { transactions } from "../db/schema";
 import { loadSourceRows, toInsert } from "./pipeline";
 
-const CSV_DIR = process.env.ITBI_CSV_DIR ?? "../apartment-hunt/itbi/csv";
+const CSV_DIR = process.env.ITBI_CSV_DIR ?? "data/csv";
 
 async function main() {
   const { final } = loadSourceRows(CSV_DIR);

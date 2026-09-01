@@ -4,10 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "bun run db:migrate && bun run import:data && next build",
     "start": "next start",
     "lint": "eslint",
     "test": "bun test",
+    "db:migrate": "bun run scripts/migrate.ts",
     "import:data": "bun run scripts/import.ts"
   },
   "dependencies": {

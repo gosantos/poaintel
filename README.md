@@ -17,8 +17,8 @@ Inteligência imobiliária de Porto Alegre a partir dos dados abertos do ITBI
 ```bash
 bun install
 
-# Carrega itbi/csv/*.csv do repositório irmão (~/Code/apartment-hunt/itbi)
-# em data/itbi.db (deduplica, calcula R$/m², tier × band)
+# Recarrega o banco a partir dos CSVs versionados em data/csv/
+# (deduplica, calcula R$/m², tier × band) → data/itbi.db
 bun run import:data
 
 bun run dev
@@ -50,7 +50,7 @@ components/     UI shadcn + gráficos
 ## Prod
 
 ```bash
-bun run build
+bun run build   # roda db:migrate + import:data + next build
 bun start
 ```
 
