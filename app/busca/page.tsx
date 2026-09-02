@@ -169,8 +169,8 @@ export default async function BuscaPage({
         <div className="mt-8 space-y-6">
           {fuzzyOnly && (
             <p className="text-sm text-muted-foreground">
-              Nenhuma rua bateu no nome. Ruas próximas, por Levenshtein e sem
-              maiúsculas nem acentos:{" "}
+              Nenhuma rua bateu no nome. Ruas parecidas (distância de
+              Levenshtein, sem maiúsculas nem acentos):{" "}
               {streetHits.map((h) => h.logradouro).join(" · ")}
             </p>
           )}
