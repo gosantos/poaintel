@@ -8,7 +8,7 @@ export default function SobrePage() {
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
       <h1 className="text-2xl font-semibold tracking-tight">Metodologia</h1>
       <p className="mt-2 text-base leading-relaxed text-muted-foreground">
-        Como esta plataforma calcula os números a partir dos dados abertos do
+        Como este site calcula os números a partir dos dados abertos do
         ITBI de Porto Alegre.
       </p>
 
@@ -94,7 +94,7 @@ export default function SobrePage() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Benchmark e a comparação</CardTitle>
+            <CardTitle className="text-base">Benchmark e comparação</CardTitle>
           </CardHeader>
           <CardContent className="text-sm leading-relaxed text-foreground">
             O benchmark de cada bairro é a{" "}
@@ -119,7 +119,7 @@ export default function SobrePage() {
             Deduplicamos por rua, número e unidade, priorizamos as linhas
             pagas e descartamos reestimadas sombreadas. Transferências
             parciais (<code className="rounded bg-muted px-1.5 py-0.5 font-mono text-sm">perc_transmitido &lt; 100</code>)
-            passam para o valor integral do imóvel.
+            são contadas pelo valor integral do imóvel.
           </CardContent>
         </Card>
 

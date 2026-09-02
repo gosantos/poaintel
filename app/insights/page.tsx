@@ -170,8 +170,8 @@ export default async function InsightsPage() {
             2010–19, {midDelta !== null ? formatPct(midDelta) : "—"}. Lançamentos 2020+
             foram de {formatNumber(at(2020, "E")?.n ?? 0)} para{" "}
             {formatNumber(at(2025, "E")?.n ?? 0)} vendas ({formatPct(eShare1).replace("+", "")}{" "}
-            do volume em 2025) — é isso que puxa a média, não a valorização do
-            mesmo prédio. O IPCA no período foi {ipca5y !== null ? formatPct(ipca5y) : "—"}.
+            do volume em 2025). É isso que puxa a média, não a
+            valorização do mesmo prédio. O IPCA no período foi {ipca5y !== null ? formatPct(ipca5y) : "—"}.
           </Takeaway>
           <Takeaway n={2} title="Cada bairro andou de um jeito.">
             Em 2025 a cidade variou {cityYoy !== null ? formatPct(cityYoy) : "—"}.
@@ -214,14 +214,15 @@ export default async function InsightsPage() {
           Valorização por época de construção
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Mesma pergunta — o m² subiu? — dentro de cada grupo. Células com
+          Dentro de cada grupo, a mesma pergunta: o m² subiu? Células com
           menos de 30 vendas ficam em branco.
         </p>
         <Card className="mt-4">
           <CardHeader>
             <CardTitle>Mediana R$/m² por ano de obra</CardTitle>
             <CardDescription>
-              Cinco grupos disjuntos. A linha da cidade some o mix; esta não.
+              Cinco grupos que não se misturam. A linha da cidade soma o mix;
+              esta não.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -236,7 +237,7 @@ export default async function InsightsPage() {
           <CardHeader>
             <CardTitle>Mediana R$/m² por ano</CardTitle>
               <CardDescription>
-                Cidade e IPCA, com 2026 parcial — mix de todas as épocas
+                Cidade e IPCA, com 2026 parcial. O mix inclui todas as épocas
               </CardDescription>
           </CardHeader>
           <CardContent>

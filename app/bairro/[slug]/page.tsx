@@ -136,8 +136,8 @@ export default async function BairroPage({
           <CardContent>
             <TrendChart data={trend} />
             <p className="mt-2 text-sm text-muted-foreground">
-              A linha pontilhada é o primeiro ano da série neste bairro,
-              atualizado pelo IPCA nacional.
+              A linha pontilhada é a mediana do primeiro ano da série neste
+              bairro, atualizada pelo IPCA nacional.
             </p>
           </CardContent>
         </Card>

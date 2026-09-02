@@ -149,7 +149,7 @@ export default async function HomePage() {
             <CardHeader>
               <CardTitle>Mediana R$/m² por ano</CardTitle>
               <CardDescription>
-                Mix da cidade e IPCA — não é valorização do mesmo estoque
+                Mix da cidade e IPCA. Não é valorização do mesmo estoque
                 {withVolume[withVolume.length - 1]?.year === 2026 ? " · 2026 parcial" : ""}
               </CardDescription>
             </CardHeader>
@@ -177,7 +177,7 @@ export default async function HomePage() {
           <CardHeader>
             <CardTitle>Valorização por época de construção</CardTitle>
             <CardDescription>
-              Cinco grupos. Prédio novo é caro, velho é barato — a média da
+              Cinco grupos. Prédio novo é caro, velho é barato. A média da
               cidade mistura os dois.
             </CardDescription>
           </CardHeader>
