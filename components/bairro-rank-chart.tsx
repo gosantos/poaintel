@@ -21,11 +21,13 @@ export function BairroRankChart({
   data: { bairro: string; n: number; medianRsm2: number }[];
   className?: string;
 }) {
-  const chartData = data.map((d) => ({
-    ...d,
-    median: d.medianRsm2,
-    label: bairroDisplay(d.bairro),
-  }));
+  const chartData = [...data]
+    .sort((a, b) => b.medianRsm2 - a.medianRsm2)
+    .map((d) => ({
+      ...d,
+      median: d.medianRsm2,
+      label: bairroDisplay(d.bairro),
+    }));
 
   return (
     <ChartContainer config={chartConfig} className={className} initialDimension={{ width: 600, height: 320 }}>
